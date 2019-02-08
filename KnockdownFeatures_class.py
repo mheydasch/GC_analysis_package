@@ -19,6 +19,7 @@ class KnockdownFeatures:
         self.__kd_path=kd_path
         self.__KD=KD
         self.__KD_pattern=re.compile('({})/[0-9]+'.format(self.__KD))
+        self.__Experiment_pattern=re.compile('SiRNA_[0-9]+')
     def info(self):
         '''
         prints info about this instance of the class
@@ -79,13 +80,14 @@ class KnockdownFeatures:
         GC_list=[]
         for file in i_dirs:
             if feature in file:
+                experiment_identifier=re.search(self.__Experiment_pattern, file).group()
                 identifier=re.search(self.__KD_pattern, file).group() 
                 temp=pd.read_csv(file, header=None)
                 rows, columns=temp.shape
                 num_identifier=[]
                 #creates a list of identfiers to match the columns
                 for i in range(0, columns):                
-                    num_identifier.append(identifier+'_'+str(i))  
+                    num_identifier.append(experiment_identifier+'/'+identifier+'n'+str(i))  
                 #renames columns with identifier    
                 temp.columns=num_identifier
                 #adding each loaded file to a list
