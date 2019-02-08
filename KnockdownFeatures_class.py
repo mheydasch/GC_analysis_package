@@ -18,7 +18,7 @@ class KnockdownFeatures:
     def __init__(self, kd_path, KD):
         self.kd_path=kd_path
         self.KD=KD
-        self.KD_pattern=re.compile('({}){}[0-9]+'.format(self.KD, os.sep))
+        self.KD_pattern=re.compile('({}){}[0-9]+(_[0-9]+)?'.format(self.KD, os.sep))
         self.Experiment_pattern=re.compile('SiRNA_[0-9]+')
     def info(self):
         '''
@@ -103,6 +103,7 @@ class KnockdownFeatures:
         #dropping NAs
         long_feature=long_feature.dropna()
         return long_feature
+    
     def load_all(self):
         '''
         loops over load_feature for each feature
