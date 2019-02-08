@@ -16,16 +16,16 @@ class KnockdownFeatures:
     class that holds all the features of one knockdown
     '''
     def __init__(self, kd_path, KD):
-        self.__kd_path=kd_path
-        self.__KD=KD
-        self.__KD_pattern=re.compile('({})/[0-9]+'.format(self.__KD))
-        self.__Experiment_pattern=re.compile('SiRNA_[0-9]+')
+        self.kd_path=kd_path
+        self.KD=KD
+        self.KD_pattern=re.compile('({}){}[0-9]+'.format(self.KD, os.sep))
+        self.Experiment_pattern=re.compile('SiRNA_[0-9]+')
     def info(self):
         '''
         prints info about this instance of the class
         '''
-        print('experiment folder: \n', self.__kd_path)
-        print('Knockdown: \n', self.__KD)
+        print('experiment folder: \n', self.kd_path)
+        print('Knockdown: \n', self.KD)
     def find_csv(self):
         '''
         returns a list with all csv files in the KD folder
@@ -37,11 +37,11 @@ class KnockdownFeatures:
         i_dirs=[]
         #Knockdown pattern, must match inserted variable self.__KD followed by '/'
         #and one or more digits
-        for root, dirs, files in os.walk(self.__kd_path):
+        for root, dirs, files in os.walk(self.kd_path):
             #looks in each folder from given path
             #if folder is matching the KD pattern, the find_dir pattern and
             #if there are csv files
-            if re.search(self.__KD_pattern, root) and find_dir in root and len([x for x in files if re.search(csv_find, x)])!=0:
+            if re.search(self.KD_pattern, root) and find_dir in root and len([x for x in files if re.search(csv_find, x)])!=0:
                 #finds the csv files in the folder and adds them to a list
                 csv_files=[x for x in files if re.search(csv_find, x)]
                 for csv in csv_files:
@@ -57,31 +57,31 @@ class KnockdownFeatures:
         '''
         #pattern: must start with a '/' followed by characters that are not '/'
         #and end with '.csv'
-        features=[]
-        csv_pattern=re.compile('[/][^/]+\.csv$')
-        i_dirs=self.find_csv()
-        for file in i_dirs:
+        self.features=[]
+        csv_pattern=re.compile('[{}][^{}]+\.csv$'.format(os.sep, os.sep))
+        self.i_dirs=self.find_csv()
+        for file in self.i_dirs:
             #making tuples for what to replace with what
-            repls = ('.csv', ''), ('/', '')      
+            repls = ('.csv', ''), (os.sep, '')     
             filename=re.search(csv_pattern, file).group()
             #applies repls to replace name parts
             filename=functools.reduce(lambda a, kv:a.replace(*kv), repls, filename)
-            if filename not in features:
-                features.append(filename)
-        return features, i_dirs
+            if filename not in self.features:
+                self.features.append(filename)
+        return self.features
   
 
   
-    def load_feature(self, feature, i_dirs):
+    def load_feature(self, feature):
         '''
         loads all csvs of a single feature
         needs to be called by load_all
         '''
         GC_list=[]
-        for file in i_dirs:
+        for file in self.i_dirs:
             if feature in file:
-                experiment_identifier=re.search(self.__Experiment_pattern, file).group()
-                identifier=re.search(self.__KD_pattern, file).group() 
+                experiment_identifier=re.search(self.Experiment_pattern, file).group()
+                identifier=re.search(self.KD_pattern, file).group() 
                 temp=pd.read_csv(file, header=None)
                 rows, columns=temp.shape
                 num_identifier=[]
@@ -102,19 +102,18 @@ class KnockdownFeatures:
         long_feature=pd.melt(full_feature, id_vars='meltid')
         #dropping NAs
         long_feature=long_feature.dropna()
-        return long_feature, GC_list
-    
+        return long_feature
     def load_all(self):
         '''
         loops over load_feature for each feature
         calls get_features to get the features and i_dirs
         '''
-        features, i_dirs = self.get_features()
+        self.get_features()
         self.all_features={}
-        for i in features:
+        for i in self.features:
                 #for each element in feature the load_feature function is called
                 #and its output is added to a dictionary with the feature as a key
-                feature, GC_list=self.load_feature(i, i_dirs)
+                feature=self.load_feature(i)
                 self.all_features.update({i:feature})                 
         return self.all_features
     
