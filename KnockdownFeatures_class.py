@@ -18,14 +18,17 @@ class KnockdownFeatures:
     def __init__(self, kd_path, KD):
         self.kd_path=kd_path
         self.KD=KD
-        self.KD_pattern=re.compile('({}){}[0-9]+(_[0-9]+)?'.format(self.KD, os.sep))
+        self.KD_pattern=re.compile('({}){}[0-9]+[^{}]'.format(self.KD, os.sep, os.sep))
         self.Experiment_pattern=re.compile('SiRNA_[0-9]+')
+        self.experiment_identifier=re.search(self.Experiment_pattern, self.kd_path).group()
     def info(self):
         '''
         prints info about this instance of the class
         '''
         print('experiment folder: \n', self.kd_path)
+        print('experiment name: \n', self.experiment_identifier)
         print('Knockdown: \n', self.KD)
+
     def find_csv(self):
         '''
         returns a list with all csv files in the KD folder
@@ -34,7 +37,7 @@ class KnockdownFeatures:
         csv_find=re.compile('\.csv$')
         #finds the directory with that specific name
         find_dir='GCAFeatureExtraction'
-        i_dirs=[]
+        self.i_dirs=[]
         #Knockdown pattern, must match inserted variable self.__KD followed by '/'
         #and one or more digits
         for root, dirs, files in os.walk(self.kd_path):
@@ -46,8 +49,8 @@ class KnockdownFeatures:
                 csv_files=[x for x in files if re.search(csv_find, x)]
                 for csv in csv_files:
                     #each csv file is added to the path and appended to a list
-                    i_dirs.append(os.path.join(root, csv))            
-        return i_dirs
+                    self.i_dirs.append(os.path.join(root, csv))            
+        return self.i_dirs
    
     def get_features(self):
         '''
@@ -68,6 +71,7 @@ class KnockdownFeatures:
             filename=functools.reduce(lambda a, kv:a.replace(*kv), repls, filename)
             if filename not in self.features:
                 self.features.append(filename)
+                
         return self.features
   
 
@@ -78,21 +82,24 @@ class KnockdownFeatures:
         needs to be called by load_all
         '''
         GC_list=[]
+        time_pattern=re.compile('n[0-9]+')
         for file in self.i_dirs:
             if feature in file:
-                experiment_identifier=re.search(self.Experiment_pattern, file).group()
                 identifier=re.search(self.KD_pattern, file).group() 
-                temp=pd.read_csv(file, header=None)
+                try:
+                    temp=pd.read_csv(file, header=None)
+                except:
+                    break
                 rows, columns=temp.shape
                 num_identifier=[]
                 #creates a list of identfiers to match the columns
                 for i in range(0, columns):                
-                    num_identifier.append(experiment_identifier+'/'+identifier+'n'+str(i))  
+                    num_identifier.append(self.experiment_identifier+'/'+identifier+'n'+str(i))  
                 #renames columns with identifier    
                 temp.columns=num_identifier
                 #adding each loaded file to a list
                 GC_list.append(temp)
-                print(GC_list)
+                print(file)
         #concatonating the list to a dataframe    
         full_feature = pd.concat(GC_list, axis=1, sort=True)
         #creating an index for melting
@@ -102,8 +109,16 @@ class KnockdownFeatures:
         long_feature=pd.melt(full_feature, id_vars='meltid')
         #dropping NAs
         long_feature=long_feature.dropna()
-        return long_feature
-    
+        long_feature=long_feature.reset_index(drop=True)
+        long_feature['experiment']=self.experiment_identifier
+        long_feature['KD']=self.KD
+        long_feature['item']='placeholder'
+        long_feature['timepoint']='placeholder'
+        for n, var in enumerate(long_feature['variable']):
+            long_feature.loc[[n],['item']]=re.search(self.KD_pattern, var).group()
+            long_feature.loc[[n],['timepoint']]=re.search(time_pattern, var).group()
+        return long_feature 
+            
     def load_all(self):
         '''
         loops over load_feature for each feature
