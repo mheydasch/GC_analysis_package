@@ -7,18 +7,15 @@ Created on Thu Feb  7 17:08:39 2019
 """
 #%%
 import os
-import argparse
 import sys
 import pandas as pd
-import plotly.plotly as py
-import plotly.graph_objs as go
 import seaborn as sns
 
 sys.path.append(os.path.realpath(__file__))
 import KnockdownFeatures_class
 
 #add the paths to the experiment folders
-path='/Users/max/Desktop/Office/test/data_test/SiRNA_30/segmented/'
+path=['/Users/max/Desktop/Office/test/data_test/SiRNA_30/segmented/', '/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
 #add the knockdowns you want to load
 Knockdowns=['CTRL', 'DLC1', 'ARHGAP17']
 class Experiment_data:
@@ -41,15 +38,18 @@ class Experiment_data:
         experiment={}
         #for each of the specified knockdowns 
         #create an object from the KnockdownFeatures class at the first path instance
-        for i in Knockdowns:
-            print('loading group: ', i)
-            temp=KnockdownFeatures_class.KnockdownFeatures(path, i)
-            #for the current object call the objects load_all function to load the features
-            temp.load_all()
-            #adds the object to a dictionary with the objects experiment identifier and the
-            #current knockdown as the key
-            experiment.update({temp.experiment_identifier+'_'+i:temp})
-            self.features=next(iter(experiment.values())).features
+        for p in path:
+            print('loading experiment', p)
+            for i in Knockdowns:
+                print('loading group: ', i)
+                if os.path.isdir(os.path.join(p, i)):
+                    temp=KnockdownFeatures_class.KnockdownFeatures(p, i)
+                    #for the current object call the objects load_all function to load the features
+                    temp.load_all()
+                    #adds the object to a dictionary with the objects experiment identifier and the
+                    #current knockdown as the key
+                    experiment.update({temp.experiment_identifier+'_'+i:temp})
+                    self.features=next(iter(experiment.values())).features
         return experiment
 
     def feature_extraction(self, feature):
