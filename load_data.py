@@ -68,7 +68,7 @@ class Experiment_data:
             l.append(temp)
         #concatonates the list to a dataframe    
         cross_group_feature = pd.concat(l, axis=0, sort=True)
-        cross_group_feature.reset_index(drop=True)
+        cross_group_feature=cross_group_feature.reset_index(drop=True)
         return cross_group_feature
     
     def extract_all(self):
