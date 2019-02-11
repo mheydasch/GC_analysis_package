@@ -116,6 +116,14 @@ class KnockdownFeatures:
         #dropping NAs
         long_feature=long_feature.dropna()
         long_feature=long_feature.reset_index(drop=True)
+        #dropping all values that cannot be converted to a float
+        for n, i in enumerate(long_feature['value']):
+            try:
+                long_feature.loc[n, 'value']=float(i)
+            except ValueError:
+                long_feature=long_feature.drop(n)
+        #reset index again        
+        long_feature=long_feature.reset_index(drop=True)
         long_feature['experiment']=self.experiment_identifier
         long_feature['KD']=self.KD
         long_feature['item']='placeholder'

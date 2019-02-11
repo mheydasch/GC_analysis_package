@@ -15,9 +15,9 @@ sys.path.append(os.path.realpath(__file__))
 import KnockdownFeatures_class
 
 #add the paths to the experiment folders
-path=['/Users/max/Desktop/Office/test/data_test/SiRNA_30/segmented/', '/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
+#path=['/Users/max/Desktop/Office/test/data_test/SiRNA_30/segmented/', '/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
 #add the knockdowns you want to load
-Knockdowns=['CTRL', 'DLC1', 'ARHGAP17']
+#Knockdowns=['CTRL', 'DLC1', 'ARHGAP17']
 class Experiment_data:
     '''
     Initialize with the pathname and a list of all knockdowns.
@@ -38,11 +38,11 @@ class Experiment_data:
         experiment={}
         #for each of the specified knockdowns 
         #create an object from the KnockdownFeatures class at the first path instance
-        for p in path:
+        for p in self.path:
             print('loading experiment', p)
-            for i in Knockdowns:
-                print('loading group: ', i)
+            for i in self.knockdowns:
                 if os.path.isdir(os.path.join(p, i)):
+                    print('loading group: ', i)
                     temp=KnockdownFeatures_class.KnockdownFeatures(p, i)
                     #for the current object call the objects load_all function to load the features
                     temp.load_all()
@@ -61,13 +61,14 @@ class Experiment_data:
             self.experiment=self.load_groups()
         #for each object in the dict
         for i in self.experiment:
-            print('extracting feature: ', feature, 'for group: ', i)
+            #print('extracting feature: ', feature, 'for group: ', i)
             #creates a list with each element being a dataframe for the same feature
             #for a different group
             temp=self.experiment[i].all_features[feature]
             l.append(temp)
         #concatonates the list to a dataframe    
         cross_group_feature = pd.concat(l, axis=0, sort=True)
+        cross_group_feature.reset_index(drop=True)
         return cross_group_feature
     
     def extract_all(self):
@@ -78,13 +79,9 @@ class Experiment_data:
         self.experiment=self.load_groups()
         self.grouped_features={}
         for feature in self.features:       
-            print('extracting feature: ', feature)
+            #print('extracting feature: ', feature)
             self.grouped_features.update({feature:self.feature_extraction(feature)})
      
         
         
 #%%
-def stat_test(feature):
-    cross_group_feature=feature_extraction(feature)
-    sns.boxplot(x=cross_group_feature['KD'], y=cross_group_feature['value'])
-    
