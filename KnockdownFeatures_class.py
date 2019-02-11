@@ -14,6 +14,11 @@ import numpy as np
 class KnockdownFeatures:
     '''
     class that holds all the features of one knockdown
+    Usage: Initialize with the path to the experiment and a list of the folder names
+    you want to search for features
+    either use find_csv() and then load_features(feature) to load an
+    individual feature, or use load_all() to load all features.
+    
     '''
     def __init__(self, kd_path, KD):
         self.kd_path=kd_path
@@ -28,6 +33,8 @@ class KnockdownFeatures:
         print('experiment folder: \n', self.kd_path)
         print('experiment name: \n', self.experiment_identifier)
         print('Knockdown: \n', self.KD)
+        
+
 
     def find_csv(self):
         '''
@@ -99,7 +106,6 @@ class KnockdownFeatures:
                 temp.columns=num_identifier
                 #adding each loaded file to a list
                 GC_list.append(temp)
-                print(file)
         #concatonating the list to a dataframe    
         full_feature = pd.concat(GC_list, axis=1, sort=True)
         #creating an index for melting
