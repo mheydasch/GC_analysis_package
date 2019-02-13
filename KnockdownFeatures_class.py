@@ -128,6 +128,7 @@ class KnockdownFeatures:
         long_feature['KD']=self.KD
         long_feature['item']='placeholder'
         long_feature['timepoint']='placeholder'
+        long_feature['value']=long_feature['value'].astype('float')
         for n, var in enumerate(long_feature['variable']):
             long_feature.loc[[n],['item']]=re.search(self.KD_pattern, var).group()
             long_feature.loc[[n],['timepoint']]=re.search(time_pattern, var).group()
