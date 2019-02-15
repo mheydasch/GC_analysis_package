@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon Feb 11 11:30:17 2019
@@ -6,6 +5,7 @@ Created on Mon Feb 11 11:30:17 2019
 @author: max
 """
 
+#!/usr/bin/env python3
 import os
 import sys
 import seaborn as sns
@@ -13,7 +13,15 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats	
 import matplotlib.pyplot as plt
+import argparse
+import plotly.plotly as py
+import plotly.graph_objs as go
+init_notebook_mode(connected=True)
 import statsmodels.api as sm
+import time
+from plotly import __version__
+from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
+print(__version__) # requires version >= 1.9.0
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.multicomp import MultiComparison
 from statsmodels.formula.api import ols
@@ -24,27 +32,119 @@ from load_data import KnockdownFeatures_class as kd
 
 #%%
 #add the paths to the experiment folders
-path=['/Users/max/Desktop/Office/test/data_test/SiRNA_30/segmented/', '/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
+#path=['/Users/max/Desktop/Office/test/data_test/SiRNA_30/segmented/', '/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
 #add the knockdowns you want to load
-Knockdowns=['CTRL', 'DLC1', 'ARHGAP17', 'DOCK10', 'ITSN1']
+#Knockdowns=['CTRL', 'DLC1', 'ARHGAP17', 'DOCK10', 'ITSN1']
 
-data=exp.Experiment_data(path, Knockdowns)
-data.extract_all()
+def parseArguments():
+  # Define the parser and read arguments
+  parser = argparse.ArgumentParser(description='creat figures for the given knockdonws in given directories')
+  parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
+  parser.add_argument('-k','--kd', nargs='+', help='add the directories with spaces between them', required=True)
+  args = parser.parse_args()
+  return(args)
+  
 #%%
 def boxplot(feature, value):
     #makes a boxplot of the values from one feature, grouped by knockdown
     ax=sns.catplot(x='experiment', y=value, hue='KD',\
                    data=data.grouped_features[feature], kind='box')
-    sig=calc_Bonferroni(feature)
+    sig, alpha=calc_Bonferroni(feature)
+    plot_median=data.grouped_features[feature].groupby(['experiment', 'KD'])[value].median()
+    nobs=[sig[x][1] for x in sig]
     axes = ax.axes.flatten()
     axes[0].set_xlabel(feature)
+    pos=range(len(nobs))
+    sns.FacetGrid.set_xticklabels(ax, nobs)
     plt.show()   
    # ax=ax.get_figure()
     plt.close()
     return ax
     #axes[1].set_title("External")
 
+def pyplot(feature, value):
     
+    #gets the keys to the groups for indexing
+    x_data=list(data.grouped_features[feature].groupby(['experiment', 'KD']).groups.keys())
+    #gets a group object the groups are referring to
+    y_index=data.grouped_features[feature].groupby(['experiment', 'KD'])[value]
+    #y_data=data.grouped_features[feature].iloc[list(y_index.groups[x_data[0]])]['value']
+    #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
+    traces=[]
+    sig, alpha=calc_Bonferroni(feature)
+    #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
+    for enum, xd in enumerate(x_data):              
+        traces.append(go.Box(
+        #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
+        # a list of indices for that group. This list of indeces is used to index the dataframe, and obtain
+        #the value column of it.        
+        y=data.grouped_features[feature].iloc[list(y_index.groups[xd])][value],
+        name=str(xd),
+        #boxpoint='all',
+        jitter=0.5,
+        whiskerwidth=0.2,
+        marker=dict(
+            size=2,
+        ),
+        line=dict(width=1),
+        ))
+
+        layout = go.Layout(              
+        title=feature,
+        yaxis=dict(
+            autorange=True,
+            showgrid=True,
+            zeroline=True,
+            dtick=5,
+            gridcolor='rgb(255, 255, 255)',
+            gridwidth=1,
+            zerolinecolor='rgb(255, 255, 255)',
+            zerolinewidth=2,
+            ),
+        margin=dict(
+            l=40,
+            r=30,
+            b=80,
+            t=100,
+        ),
+        paper_bgcolor='rgb(243, 243, 243)',
+        plot_bgcolor='rgb(243, 243, 243)',
+        showlegend=True
+        )
+    
+    fig = go.Figure(data=traces, layout=layout)
+    for enum, xd in enumerate(x_data): 
+        sig_index=xd[0]+xd[1]
+        try:
+            #getting the title for each column the following way:
+            #getting the sig_index by concatonating the two strings of xd
+            #and using this as the key for the bonferrony corrected t_test
+            #to obtain the second value, which is the p value
+            t=round(sig[sig_index][1], 4)
+        except:
+            t=''     
+        fig['layout']['annotations']+=tuple([dict(
+                    #positions on x axis based on current box
+                    x=enum,
+                    #positions text based on y axis based on the median of current box
+                    y=data.grouped_features[feature].iloc[list(y_index.groups[xd])]['value'].median(),
+                    yref='y',                
+                    xref='x',
+                    text=t,
+                    showarrow=True,
+                    arrowhead=0,
+                    ax=0,
+                    ay=-10
+                    )])
+    plot(fig)
+    return fig
+def loop_graph(function, value):
+    for f in data.features:
+        function(f, value)
+        time.sleep(1)
+        
+        
+#%%    
     #data.grouped_features[feature].boxplot('z_score', by='KD', figsize=(12, 8))
 #either computes the MAD (robust==True),
 #or the standard deviation(robust==False)
@@ -135,15 +235,25 @@ def calc_Bonferroni(f):
     alpha=0.05/len(grps)
     sig={}
     for enum, experiment in enumerate(grps):
-        for group in experiment:
             for g in experiment:
-                if g !=group:
-                    temp=stats.ttest_ind(data.grouped_features[f]['value'][(data.grouped_features[f]['KD'] == group) & (data.grouped_features[f]['experiment'] == grps.index[enum])], \
+                if g != 'CTRL':
+                    temp=stats.ttest_ind(data.grouped_features[f]['value'][(data.grouped_features[f]['KD'] == 'CTRL') & (data.grouped_features[f]['experiment'] == grps.index[enum])], \
                                         data.grouped_features[f]['value'][(data.grouped_features[f]['KD'] == g) & (data.grouped_features[f]['experiment'] == grps.index[enum])])
-                    key=grps.index[enum]+group+':'+g
+                    key=grps.index[enum]+g
                     sig.update({key:temp})
-    return sig
+    return sig, alpha
 
+if __name__ == '__main__':
+    args=parseArguments()
+    path=args.dir  
+    knockdowns=args.dir
+    data=exp.Experiment_data(path, knockdowns)
+    data.extract_all()
+    loop_graph(pyplot, 'value')
+    print(args)
+
+#%%
+#pyplot(feature, 'value')
 #%%    
 # =============================================================================
 # def calc_man_ANOVA(f):
