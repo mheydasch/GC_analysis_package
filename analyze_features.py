@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import argparse
 import plotly.plotly as py
 import plotly.graph_objs as go
-init_notebook_mode(connected=True)
+#init_notebook_mode(connected=True)
 import statsmodels.api as sm
 import time
 from plotly import __version__
@@ -139,6 +139,9 @@ def pyplot(feature, value):
     plot(fig)
     return fig
 def loop_graph(function, value):
+    '''
+    creates a graph for each feature
+    '''
     for f in data.features:
         function(f, value)
         time.sleep(1)
