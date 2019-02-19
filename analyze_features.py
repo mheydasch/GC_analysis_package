@@ -14,6 +14,7 @@ import pandas as pd
 import scipy.stats as stats	
 import matplotlib.pyplot as plt
 import argparse
+import plotly 
 import plotly.plotly as py
 import plotly.graph_objs as go
 #init_notebook_mode(connected=True)
@@ -31,10 +32,12 @@ from load_data import KnockdownFeatures_class as kd
 
 
 #%%
-#add the paths to the experiment folders
-#path=['/Users/max/Desktop/Office/test/data_test/SiRNA_30/segmented/', '/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
-#add the knockdowns you want to load
-#Knockdowns=['CTRL', 'DLC1', 'ARHGAP17', 'DOCK10', 'ITSN1']
+# =============================================================================
+# #add the paths to the experiment folders
+# path=['/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
+# #add the knockdowns you want to load
+# knockdowns=['CTRL', 'ARHGAP17', 'DOCK10', 'ITSN1']
+# =============================================================================
 
 def parseArguments():
   # Define the parser and read arguments
@@ -136,7 +139,7 @@ def pyplot(feature, value):
                     ax=0,
                     ay=-10
                     )])
-    plot(fig)
+    plotly.offline.plot(fig, filename = '{}{}.html'.format(path[0],feature), auto_open=False)
     return fig
 def loop_graph(function, value):
     '''
@@ -249,7 +252,7 @@ def calc_Bonferroni(f):
 if __name__ == '__main__':
     args=parseArguments()
     path=args.dir  
-    knockdowns=args.dir
+    knockdowns=args.kd
     data=exp.Experiment_data(path, knockdowns)
     data.extract_all()
     loop_graph(pyplot, 'value')
