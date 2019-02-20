@@ -23,7 +23,7 @@ class KnockdownFeatures:
     def __init__(self, kd_path, KD):
         self.kd_path=kd_path
         self.KD=KD
-        self.KD_pattern=re.compile('({}){}[0-9]+[^{}]'.format(self.KD, os.sep, os.sep))
+        self.KD_pattern=re.compile('({}{}[0-9]+)'.format(self.KD, os.sep))
         self.Experiment_pattern=re.compile('SiRNA_[0-9]+')
         self.experiment_identifier=re.search(self.Experiment_pattern, self.kd_path).group()
     def info(self):
@@ -89,7 +89,7 @@ class KnockdownFeatures:
         needs to be called by load_all
         '''
         GC_list=[]
-        time_pattern=re.compile('n[0-9]+')
+        time_pattern=re.compile('(n[0-9]+)')
         for file in self.i_dirs:
             if feature in file:
                 identifier=re.search(self.KD_pattern, file).group() 
@@ -122,17 +122,27 @@ class KnockdownFeatures:
                 long_feature.loc[n, 'value']=float(i)
             except ValueError:
                 long_feature=long_feature.drop(n)
-        #reset index again        
+        #reset index again    
         long_feature=long_feature.reset_index(drop=True)
         long_feature['experiment']=self.experiment_identifier
         long_feature['KD']=self.KD
-        long_feature['item']='placeholder'
-        long_feature['timepoint']='placeholder'
         long_feature['value']=long_feature['value'].astype('float')
-        for n, var in enumerate(long_feature['variable']):
-            long_feature.loc[[n],['item']]=re.search(self.KD_pattern, var).group()
-            long_feature.loc[[n],['timepoint']]=re.search(time_pattern, var).group()
+        long_feature['item']=long_feature['variable'].str.extract(self.KD_pattern)
+        long_feature['timepoint']=long_feature['variable'].str.extract(time_pattern)
+
         return long_feature 
+# =============================================================================
+#         long_feature=long_feature.reset_index(drop=True)
+#         long_feature['experiment']=self.experiment_identifier
+#         long_feature['KD']=self.KD
+#         long_feature['item']='placeholder'
+#         long_feature['timepoint']='placeholder'
+#         long_feature['value']=long_feature['value'].astype('float')
+#         for n, var in enumerate(long_feature['variable']):
+#             long_feature.loc[[n],['item']]=re.search(self.KD_pattern, var).group()
+#             long_feature.loc[[n],['timepoint']]=re.search(time_pattern, var).group()
+#         return long_feature 
+# =============================================================================
             
     def load_all(self):
         '''

@@ -19,7 +19,9 @@ import plotly.plotly as py
 import plotly.graph_objs as go
 #init_notebook_mode(connected=True)
 import statsmodels.api as sm
+from xattr import xattr
 import time
+import subprocess
 from plotly import __version__
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 print(__version__) # requires version >= 1.9.0
@@ -29,6 +31,7 @@ from statsmodels.formula.api import ols
 sys.path.append(os.path.realpath(__file__))
 import load_data as exp
 from load_data import KnockdownFeatures_class as kd
+
 
 
 #%%
@@ -41,7 +44,7 @@ from load_data import KnockdownFeatures_class as kd
 
 def parseArguments():
   # Define the parser and read arguments
-  parser = argparse.ArgumentParser(description='creat figures for the given knockdonws in given directories')
+  parser = argparse.ArgumentParser(description='a function including various statistical tools to be applied to the data objects.')
   parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
   parser.add_argument('-k','--kd', nargs='+', help='add the directories with spaces between them', required=True)
   args = parser.parse_args()
@@ -64,8 +67,15 @@ def boxplot(feature, value):
     plt.close()
     return ax
     #axes[1].set_title("External")
+def createFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print ('Error: Creating directory. ' + directory) 
 
 def pyplot(feature, value):
+    to_tag=False
     
     #gets the keys to the groups for indexing
     x_data=list(data.grouped_features[feature].groupby(['experiment', 'KD']).groups.keys())
@@ -83,6 +93,8 @@ def pyplot(feature, value):
         #the value column of it.        
         y=data.grouped_features[feature].iloc[list(y_index.groups[xd])][value],
         name=str(xd),
+        #adds the points for each value next to the box
+        boxpoints='all',
         #boxpoint='all',
         jitter=0.5,
         whiskerwidth=0.2,
@@ -114,18 +126,31 @@ def pyplot(feature, value):
         plot_bgcolor='rgb(243, 243, 243)',
         showlegend=True
         )
-    
+ 
     fig = go.Figure(data=traces, layout=layout)
-    for enum, xd in enumerate(x_data): 
+    #counts the number of observations for each group
+    count=data.grouped_features[feature].groupby(['experiment', 'KD'])['value'].count()
+    for enum, xd in enumerate(x_data):
         sig_index=xd[0]+xd[1]
+        #gets the number of observations for the current box
+        n=str(count[xd])
+
+        
+        #getting the title for each column the following way:
+        #getting the sig_index by concatonating the two strings of xd
+        #and using this as the key for the bonferrony corrected t_test
+        #to obtain the second value, which is the p value
         try:
-            #getting the title for each column the following way:
-            #getting the sig_index by concatonating the two strings of xd
-            #and using this as the key for the bonferrony corrected t_test
-            #to obtain the second value, which is the p value
-            t=round(sig[sig_index][1], 4)
+            p=round(sig[sig_index][1], 4)
+            #adds a star if the p value is significant
+            if p < alpha:
+                p=str(p)
+                p=p+'*'
+                to_tag=True
+            p=str(p)
         except:
-            t=''     
+            p=''   
+        
         fig['layout']['annotations']+=tuple([dict(
                     #positions on x axis based on current box
                     x=enum,
@@ -133,14 +158,23 @@ def pyplot(feature, value):
                     y=data.grouped_features[feature].iloc[list(y_index.groups[xd])]['value'].median(),
                     yref='y',                
                     xref='x',
-                    text=t,
+                    text='p: {}<br>n: {}'.format(p, n),
                     showarrow=True,
+                    #determines the length of the arrow for the annotation text
                     arrowhead=0,
                     ax=0,
                     ay=-10
                     )])
-    plotly.offline.plot(fig, filename = '{}{}.html'.format(path[0],feature), auto_open=False)
+    if to_tag==True:
+        sig_folder=os.path.join(path[0], 'significant')
+        createFolder(sig_folder)
+        file='{}{}.html'.format(sig_folder+os.sep ,feature)
+    else:
+        file='{}{}.html'.format(path[0],feature)
+    plotly.offline.plot(fig, filename = file, auto_open=False)
+        
     return fig
+
 def loop_graph(function, value):
     '''
     creates a graph for each feature
