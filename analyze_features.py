@@ -8,17 +8,20 @@ Created on Mon Feb 11 11:30:17 2019
 #!/usr/bin/env python3
 import os
 import sys
-# =============================================================================
-# import seaborn as sns
-# =============================================================================
+#import seaborn as sns
 import numpy as np
 import pandas as pd
 import scipy.stats as stats	
+#import matplotlib.pyplot as plt
 import argparse
 import plotly 
+#import plotly.plotly as py
 import plotly.graph_objs as go
 #init_notebook_mode(connected=True)
+#import statsmodels.api as sm
+#from xattr import xattr
 import time
+#import subprocess
 from plotly import __version__
 #from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 print(__version__) # requires version >= 1.9.0
@@ -167,7 +170,7 @@ def pyplot(feature, value):
     if to_tag==True:
         sig_folder=os.path.join(path[0], 'significant')
         createFolder(sig_folder)
-        file='{}{}.html'.format(sig_folder+os.sep ,feature)
+        file='{}{}.html'.format(sig_folder,feature)
     else:
         file='{}{}.html'.format(path[0],feature)
     plotly.offline.plot(fig, filename = file, auto_open=False)
@@ -281,7 +284,7 @@ def calc_Bonferroni(f):
                     key=grps.index[enum]+g
                     sig.update({key:temp})
     return sig, alpha
-
+#%%
 if __name__ == '__main__':
     args=parseArguments()
     path=args.dir  
