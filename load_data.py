@@ -81,7 +81,56 @@ class Experiment_data:
         for feature in self.features:       
             #print('extracting feature: ', feature)
             self.grouped_features.update({feature:self.feature_extraction(feature)})
-     
-        
-        
+#%%
+    def pca_feature_data(self):
+        '''
+        creates a wide format dataframe with the feature data for each cell
+        to use for PCA analysis
+        '''
+        temp=[]
+        #loops through features
+        for enum, f in enumerate(self.features):
+            #computes the median value of the current feature for each group and appends the 
+            #resulting dataframe consisting of variavle and median value
+            #to the list
+            temp.append(self.grouped_features[f].groupby('variable').agg({'value':'median'}))
+            #renames the column of the dataframe to the current feature
+            temp[enum].rename(columns = {'value':'{}'.format(f)}, inplace = True)
+        #concatonates the list to one data frame adding it as an attribute to the object
+        self.wide_feature=pd.concat(temp, axis=1, sort=True)
+
+    def pca_attribute_data(self):
+        '''
+        creates a wide format dataframe with the attributes, experiment and knockdown,
+        for each cell.
+        to use for PCA analysis
+        '''
+        kd={}
+        exp={}
+        #loops through the features
+        for f in self.features:
+            #prints the current feature to show progress
+            print('collecting attributes of feature {}'.format(f))
+            #loops through the variables
+            for enum, i in enumerate(self.grouped_features[f]['variable']):
+                #if the current variable is not already in the dictionary
+                if f not in kd:
+                    #updates the dictionary with the variable and the knockdown
+                    kd.update({i:self.grouped_features[f].loc[enum]['KD']})
+                    #updates the dictionary with the variable and the experiment
+                    exp.update({i:self.grouped_features[f].loc[enum]['experiment']})
+        #makes dataframes from the two dictionaries            
+        temp1=pd.DataFrame.from_dict(kd, orient='index', columns=['class1'])
+        temp2=pd.DataFrame.from_dict(exp, orient='index', columns=['class2'])
+        #joins the two dataframes and adds them as an attribute to the object
+        self.wide_attribute=temp1.join(temp2)
+            
+    def save_df(self, df, path, name):
+        '''
+        saves a data frame to a csv
+        df= DataFrame
+        path= full path where to save
+        name= name of the csv file.
+        '''
+        df.to_csv('{}{}.csv'.format(path, name))
 #%%

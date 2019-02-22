@@ -35,20 +35,20 @@ import load_data as exp
 
 
 #%%
-# =============================================================================
-# #add the paths to the experiment folders
-# path=['/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
-# #add the knockdowns you want to load
-# knockdowns=['CTRL', 'ARHGAP17', 'DOCK10', 'ITSN1']
-# =============================================================================
+#add the paths to the experiment folders
+path=['/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
+#add the knockdowns you want to load
+knockdowns=['CTRL', 'ARHGAP17', 'DOCK10', 'ITSN1']
 
-def parseArguments():
-  # Define the parser and read arguments
-  parser = argparse.ArgumentParser(description='a function including various statistical tools to be applied to the data objects.')
-  parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
-  parser.add_argument('-k','--kd', nargs='+', help='add the directories with spaces between them', required=True)
-  args = parser.parse_args()
-  return(args)
+# =============================================================================
+# def parseArguments():
+#   # Define the parser and read arguments
+#   parser = argparse.ArgumentParser(description='a function including various statistical tools to be applied to the data objects.')
+#   parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
+#   parser.add_argument('-k','--kd', nargs='+', help='add the directories with spaces between them', required=True)
+#   args = parser.parse_args()
+#   return(args)
+# =============================================================================
   
 #%%
 # =============================================================================
@@ -285,14 +285,16 @@ def calc_Bonferroni(f):
                     sig.update({key:temp})
     return sig, alpha
 #%%
-if __name__ == '__main__':
-    args=parseArguments()
-    path=args.dir  
-    knockdowns=args.kd
-    data=exp.Experiment_data(path, knockdowns)
-    data.extract_all()
-    loop_graph(pyplot, 'value')
-    print(args)
+# =============================================================================
+# if __name__ == '__main__':
+#     args=parseArguments()
+#     path=args.dir  
+#     knockdowns=args.kd
+#     data=exp.Experiment_data(path, knockdowns)
+#     data.extract_all()
+#     loop_graph(pyplot, 'value')
+#     print(args)
+# =============================================================================
 
 #%%
 #pyplot(feature, 'value')
