@@ -101,6 +101,7 @@ class Experiment_data:
             temp[enum].rename(columns = {'value':'{}'.format(f)}, inplace = True)
         #concatonates the list to one data frame adding it as an attribute to the object
         self.wide_feature=pd.concat(temp, axis=1, sort=True)
+        self.wide_feature=self.wide_feature.fillna(0)
 
     def pca_attribute_data(self):
         '''
@@ -127,7 +128,12 @@ class Experiment_data:
         temp2=pd.DataFrame.from_dict(exp, orient='index', columns=['class2'])
         #joins the two dataframes and adds them as an attribute to the object
         self.wide_attribute=temp1.join(temp2)
-            
+        
+        
+        
+        
+        
+        
     def save_df(self, df, path, name):
         '''
         saves a dataframe to a csv
@@ -135,5 +141,5 @@ class Experiment_data:
         path= full path where to save
         name= name of the csv file.
         '''
-        df.to_csv('{}{}.csv'.format(path, name))
+        df.to_csv('{}{}.csv'.format(path, name), index_label='ID')
 #%%
