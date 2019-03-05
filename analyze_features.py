@@ -302,9 +302,9 @@ if __name__ == '__main__':
     if TSNE=='True':
         data.pca_feature_data()
         data.pca_attribute_data()
-        data.save_df(data.wide_feature, path, 'wide_feature')
-        data.save_df(data.wide_feature, path, 'wide_time')
-        data.save_df(data.wide_attribute, path, 'wide_attribute')
+        data.save_df(data.wide_feature, path[0], 'wide_feature')
+        data.save_df(data.wide_feature, path[0], 'wide_time')
+        data.save_df(data.wide_attribute, path[0], 'wide_attribute')
 #%%
 #pyplot(feature, 'value')
 #%%    
