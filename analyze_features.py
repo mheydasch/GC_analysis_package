@@ -148,8 +148,10 @@ def pyplot(feature, value):
             if p < alpha:
                 p=str(p)
                 p=p+'*'
+                #marks the plot as being significant
                 to_tag=True
             p=str(p)
+        #exception, if no p value exists (i.e. for control)
         except:
             p=''   
         
@@ -168,9 +170,10 @@ def pyplot(feature, value):
                     ay=-10
                     )])
     if to_tag==True:
+        #saves the plot in a different folder, if one or more groups show significance
         sig_folder=os.path.join(path[0], 'significant')
         createFolder(sig_folder)
-        file='{}{}.html'.format(sig_folder,feature)
+        file='{}/{}.html'.format(sig_folder,feature)
     else:
         file='{}{}.html'.format(path[0],feature)
     plotly.offline.plot(fig, filename = file, auto_open=False)

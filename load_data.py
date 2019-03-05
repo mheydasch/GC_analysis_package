@@ -35,6 +35,9 @@ class Experiment_data:
         print(self.knockdowns, self.path, self.features)
     
     def load_groups(self):
+        '''
+        loads the objects for each individual feature
+        '''
         experiment={}
         #for each of the specified knockdowns 
         #create an object from the KnockdownFeatures class at the first path instance
@@ -127,7 +130,7 @@ class Experiment_data:
             
     def save_df(self, df, path, name):
         '''
-        saves a data frame to a csv
+        saves a dataframe to a csv
         df= DataFrame
         path= full path where to save
         name= name of the csv file.
