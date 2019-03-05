@@ -48,6 +48,8 @@ def parseArguments():
   parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
   parser.add_argument('-k','--kd', nargs='+', help='add the directories with spaces between them', required=True)
   parser.add_argument('-t','--TSNE', help='set True for TSNE output', required=False)
+  parser.add_argument('-f','--figures', help='set True for figure printing', required=False)
+
 
   args = parser.parse_args()
   return(args)
@@ -295,9 +297,11 @@ if __name__ == '__main__':
     path=args.dir  
     knockdowns=args.kd
     TSNE=args.TSNE
+    figures=args.figures
     data=exp.Experiment_data(path, knockdowns)
     data.extract_all()
-    loop_graph(pyplot, 'value')
+    if figures=='True':
+        loop_graph(pyplot, 'value')
     print(args)
     if TSNE=='True':
         data.pca_feature_data()

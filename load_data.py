@@ -124,7 +124,8 @@ class Experiment_data:
                     kd.update({i:self.grouped_features[f].loc[enum]['KD']})
                     #updates the dictionary with the variable and the experiment
                     exp.update({i:self.grouped_features[f].loc[enum]['experiment']})
-                    exp_kd.update({i:self.grouped_features[f].loc[enum]['experiment']+self.grouped_features[f].loc[enum]['KD']})
+                    comb=str(self.grouped_features[f].loc[enum]['experiment']+self.grouped_features[f].loc[enum]['KD'])
+                    exp_kd.update({i:comb})
         #makes dataframes from the two dictionaries            
         temp1=pd.DataFrame.from_dict(kd, orient='index', columns=['knockdown'])
         temp2=pd.DataFrame.from_dict(exp, orient='index', columns=['experiment'])
@@ -132,6 +133,7 @@ class Experiment_data:
         #joins the two dataframes and adds them as an attribute to the object
         self.wide_attribute=temp1.join(temp2)
         self.wide_attribute=self.wide_attribute.join(temp3)
+        
         
         
         
