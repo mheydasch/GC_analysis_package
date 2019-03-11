@@ -58,7 +58,7 @@ It will create the following data structures:
                              value for the feature
                       variable: experiment+item+timepoint. This is the unique ID
                       for the cell and timepoint.
-   
+edit self.exclude to exclude features from being printed to the csv files   
 Dependencies:
     KnockdownFeatures_class.py
 '''
@@ -78,6 +78,7 @@ class Experiment_data:
     def __init__(self, path, knockdowns):
         self.knockdowns=knockdowns
         self.path=path
+        self.exclude=['meas_branchIntensity_2ndOrder', 'meas_filoIntensityToVeil_Norm', 'meas_filoIntensityEmbedded_Norm']
         #the upcoming functions will become elements of the class
     
     def info(self):
@@ -142,7 +143,8 @@ class Experiment_data:
         '''
         temp=[]
         #loops through features
-        for enum, f in enumerate(self.features):
+        feature_list=[i for i in self.features if i not in self.exclude]
+        for enum, f in enumerate(feature_list):
             #computes the median value of the current feature for each group and appends the 
             #resulting dataframe consisting of variavle and median value
             #to the list
@@ -162,8 +164,9 @@ class Experiment_data:
         kd={}
         exp={}
         exp_kd={}
+        feature_list=[i for i in self.features if i not in self.exclude]
         #loops through the features
-        for f in self.features:
+        for f in feature_list:
             #prints the current feature to show progress
             print('collecting attributes of feature {}'.format(f))
             #loops through the variables

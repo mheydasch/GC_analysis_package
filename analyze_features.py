@@ -53,8 +53,7 @@ Dependencies:
 # path=['/Users/max/Desktop/Office/test/data_test/SiRNA_31/segmented/']
 # #add the knockdowns you want to load
 # knockdowns=['CTRL', 'ARHGAP17', 'DOCK10', 'ITSN1']
-# =============================================================================
-
+# ============================================================================= 
 def parseArguments():
   # Define the parser and read arguments
   parser = argparse.ArgumentParser(description='a function including various statistical tools to be applied to the data objects.')
@@ -66,7 +65,7 @@ def parseArguments():
 
   args = parser.parse_args()
   return(args)
-  
+ 
 #%%
 # =============================================================================
 # def boxplot(feature, value):
