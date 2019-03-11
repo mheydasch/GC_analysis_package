@@ -311,6 +311,7 @@ if __name__ == '__main__':
     TSNE=args.TSNE
     figures=args.figures
     data=exp.Experiment_data(path, knockdowns)
+    print(args)
     data.extract_all()
     if figures=='True':
         loop_graph(pyplot, 'value')
@@ -318,13 +319,14 @@ if __name__ == '__main__':
         calc_z_score()
         loop_graph(pyplot, 'z_score')
     
-    print(args)
+    
     if TSNE=='True':
         data.pca_feature_data()
         data.pca_attribute_data()
         data.save_df(data.wide_feature, path[0], 'wide_feature')
         data.save_df(data.wide_feature, path[0], 'wide_time')
         data.save_df(data.wide_attribute, path[0], 'wide_attribute')
+        print('csv files for TSNE are saved at{}'.format(path[0]))
 #%%
 #pyplot(feature, 'value')
 #%%    
