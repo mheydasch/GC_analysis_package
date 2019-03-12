@@ -237,49 +237,112 @@ def calc_mean_features():
     mean_features.columns = ["_".join(x) for x in mean_features.columns.ravel()]
     mean_features=mean_features.reset_index(drop=True)
     return mean_features
-def calc_mean_ctrl():
+def calc_mean_ctrl(all_features=False):
     '''
     calculates the mean values of each feature grouped by timepoint and by experiment
     only for the ctrl
     '''
-    mean_ctrl=[]
-    for f in data.features:
-        temp=pd.DataFrame()
-        temp=data.grouped_features[f][data.grouped_features[f]['KD']=='CTRL'].groupby(['timepoint', 'experiment'], as_index=False).agg({'value':[MAD_robust, Mean_robust]})    
-        temp['feature']=f
-        mean_ctrl.append(temp)
-    mean_ctrl = pd.concat(mean_ctrl, axis=0, sort=True)
-    mean_ctrl.columns = ["_".join(x) for x in mean_ctrl.columns.ravel()]
-    mean_ctrl=mean_ctrl.reset_index(drop=True)
+    #all features==False used fors tandard z_score. Only calculates the mean and standard deviation for the control
+    if all_features==False:
+        mean_ctrl=[]
+        for f in data.features:
+            temp=pd.DataFrame()
+            temp=data.grouped_features[f][data.grouped_features[f]['KD']=='CTRL'].groupby(['timepoint', 'experiment'], as_index=False).agg({'value':[MAD_robust, Mean_robust]})    
+            temp['feature']=f
+            mean_ctrl.append(temp)
+        mean_ctrl = pd.concat(mean_ctrl, axis=0, sort=True)
+        mean_ctrl.columns = ["_".join(x) for x in mean_ctrl.columns.ravel()]
+        mean_ctrl=mean_ctrl.reset_index(drop=True)
+    #if all features==True used for internal z_score, computes the mean and standard deviation
+    #for all knockdowns
+    if all_features==True:
+        mean_ctrl=[]
+        for k in data.knockdowns:
+            for f in data.features:
+                temp=pd.DataFrame()
+                temp=data.grouped_features[f][data.grouped_features[f]['KD']==k].groupby(['timepoint', 'experiment'], as_index=False).agg({'value':[MAD_robust, Mean_robust]})    
+                temp['feature']=f
+                temp['knockdown']=k
+                mean_ctrl.append(temp)
+        mean_ctrl = pd.concat(mean_ctrl, axis=0, sort=True)
+        mean_ctrl.columns = ["_".join(x) for x in mean_ctrl.columns.ravel()]
+        mean_ctrl=mean_ctrl.reset_index(drop=True)
     return mean_ctrl    
 
-def calc_z_score():
+def calc_z_score(internal=False):
     '''
-    uses each value 
+    if internal==False calculates standard z_score using calc_mean_ctrl(all_features=False)
+    calculates the z_score as the distance of the values from the mean control.
+    
+    if internal==True calculates the z_score using calc_mean_ctrl(all_features=True)
+    calculates the z_score as the distance of values of each knockdown from it's own mean.
+    The sum of these values can be used as a measure for heterogeneity.
     '''
     #mean_features=calc_mean_features()
-    mean_ctrl=calc_mean_ctrl()
-    for f in data.features:    
-        data.grouped_features[f]['z_score']=''
-        print(f)
-        for enum, row in  enumerate(data.grouped_features[f]['value']):
-            #populating variables for the identifiers of the df
-            #k=data.grouped_features[f].iloc[enum]['KD']
+    if internal==False:
+        mean_ctrl=calc_mean_ctrl()
+        for f in data.features:    
+            data.grouped_features[f]['z_score']=''
+            print(f)
+            for enum, row in  enumerate(data.grouped_features[f]['value']):
+                #populating variables for the identifiers of the df
+                #k=data.grouped_features[f].iloc[enum]['KD']
+    
+                e=data.grouped_features[f].iloc[enum]['experiment']
+                t=data.grouped_features[f].iloc[enum]['timepoint']
+                #creating boolean mask to subset the correct items from the mean feature df
+                #feature_mask=((mean_features['feature_']==f) & (mean_features['KD_']==k) & (mean_features['experiment_']==e) & (mean_features['timepoint_']==t))
+                #creating boolean mask for the ctrl, same as for knockdown, but without the knockdown parameter
+                ctrl_mask=((mean_ctrl['feature_']==f) & (mean_ctrl['experiment_']==e) & (mean_ctrl['timepoint_']==t))
+                #print(f, k, e, t, enum)
+                #calculating z_score
+                z_score=(row-mean_ctrl['value_Mean_robust'][ctrl_mask].values[0])/(mean_ctrl['value_MAD_robust'][ctrl_mask].values[0])
+              
+                data.grouped_features[f].loc[[enum],['z_score']]=np.float64(z_score)
+            data.grouped_features[f]['z_score']= data.grouped_features[f]['z_score'].astype(float)
+    if internal==True:
+        mean_ctrl=calc_mean_ctrl(all_features=True)
+        
+        for f in data.features: 
+            print(f)
+            data.grouped_features[f]['z_score_int']=''
+            for k in data.knockdowns:
+                print(k)
 
-            e=data.grouped_features[f].iloc[enum]['experiment']
-            t=data.grouped_features[f].iloc[enum]['timepoint']
-            #creating boolean mask to subset the correct items from the mean feature df
-            #feature_mask=((mean_features['feature_']==f) & (mean_features['KD_']==k) & (mean_features['experiment_']==e) & (mean_features['timepoint_']==t))
-            #creating boolean mask for the ctrl, same as for knockdown, but without the knockdown parameter
-            ctrl_mask=((mean_ctrl['feature_']==f) & (mean_ctrl['experiment_']==e) & (mean_ctrl['timepoint_']==t))
-            #print(f, k, e, t, enum)
-            #calculating z_score
-            z_score=(row-mean_ctrl['value_Mean_robust'][ctrl_mask].values[0])/(mean_ctrl['value_MAD_robust'][ctrl_mask].values[0])
-          
-            data.grouped_features[f].loc[[enum],['z_score']]=np.float64(z_score)
-        data.grouped_features[f]['z_score']= data.grouped_features[f]['z_score'].astype(float)
+   
+                #creating a boolean mask for the knockdowns
+                knockdown_mask=data.grouped_features[f]['KD']==k              
 
-def calc_hetero(norm=True):
+                #iterating through the values of current featurer only for the current knockdown
+                for enum, row in  enumerate(data.grouped_features[f][knockdown_mask]['value']):
+                    #populating variables for the identifiers of the df
+                    e=data.grouped_features[f][knockdown_mask].iloc[enum]['experiment']
+                    t=data.grouped_features[f][knockdown_mask].iloc[enum]['timepoint']
+                    #creating a boolean mask to subset the correct items by feature, experiment, timepoint and knockdown
+                    ctrl_mask=((mean_ctrl['feature_']==f) & (mean_ctrl['experiment_']==e) & (mean_ctrl['timepoint_']==t) & 
+                               (mean_ctrl['knockdown_']==k))
+                    #is getting the index in the original dataframe, as we here work on a boolean subset which changes indexing
+                    original_index=data.grouped_features[f][knockdown_mask].iloc[enum][:].name
+                    #calculates the z_score as subtracting from the current value, the corresponding mean and dividing this by the corresponding
+                    #standard deviation
+                    z_score=(row-mean_ctrl['value_Mean_robust'][ctrl_mask].values[0])/(mean_ctrl['value_MAD_robust'][ctrl_mask].values[0])
+                    #adds the z_score value to the column 'z_score_int' as a float64
+                    data.grouped_features[f].loc[[original_index],['z_score_int']]=np.float64(z_score)
+                
+
+        
+def calc_hetero(norm=True, internal=True):
+    '''
+    calculates the hetereogeneity.
+    Proper use should be with norm=True and internal=True.
+    In that case the heterogeneity is expressed as the sum of absolute values
+    of z_scores that are calculated of the distance from the mean of the same knockdown.
+    if internal=False. Z_score is calculated as the distance from the mean of the control.
+    This leads to the output being a measure of the distance from the control, rather
+    than of heterogeneity.
+    If norm=False the standarddeviation of the unnormalized values will be used instead,
+    leading to bias if larger values differ.
+    '''
     if norm==False:
         #calculates the total standard deviation for each knock down per feature and the sum of it.
         standev=[]
@@ -291,28 +354,43 @@ def calc_hetero(norm=True):
         standev['total']=standev.sum(axis=1)    
         return standev
     if norm==True:
-        #calculates the z_score using the calc_z_score() function.
-        calc_z_score()
+        if internal==True:
+            score='z_score_int'
+            calc_z_score(internal=True)
+        if internal==False:
+             #calculates the z_score using the calc_z_score() function.
+             score='z_score'
+             calc_z_score()
+                    
         #calculates the total z_score (absolute values) for each knock down per feature and the sum of it.
         z_sum=[]
         for f in data.feature_list:
-            temp=pd.DataFrame(data.grouped_features[f].groupby('KD')['z_score'].apply(lambda c: c.abs().sum()))
-            temp=temp.rename(columns={'z_score':f})
+            temp=pd.DataFrame(data.grouped_features[f].groupby('KD')[score].apply(lambda c: c.abs().sum()))
+            temp=temp.rename(columns={score:f})
             z_sum.append(temp)
         z_sum=pd.concat(z_sum, axis=1, sort=True)
         z_sum['total']=z_sum.sum(axis=1)  
         return z_sum
     
-def calc_ANOVA(f):    
+def calc_ANOVA(f):
+    '''
+    f= name of feature
+    '''    
     model_name= ols('value ~ C(KD)', data=data.grouped_features[f]).fit()
     return model_name
 #https://pythonfordatascience.org/anova-python/
 def calc_Tukey(f):
+    '''
+    f= name of feature
+    '''
     mc=MultiComparison(data.grouped_features[f]['value'],data.grouped_features[f]['KD'])
     mc_results=mc.tukeyhsd()
     return mc_results
 
 def calc_Bonferroni(f):
+    '''
+    f= name of feature
+    '''
     #creating the groups based on the knockdowns for each experiment. 
     #gives a series with the experiment being the index
     grps=data.grouped_features[f].groupby('experiment')['KD'].unique()

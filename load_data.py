@@ -78,8 +78,7 @@ class Experiment_data:
     def __init__(self, path, knockdowns):
         self.knockdowns=knockdowns
         self.path=path
-        self.exclude=['meas_branchIntensity_2ndOrder', 'meas_filoIntensityToVeil_Norm', 'meas_filoIntensityEmbedded_Norm']
-        self.feature_list=[i for i in self.features if i not in self.exclude]
+
         #the upcoming functions will become elements of the class
     
     def info(self):
@@ -104,6 +103,10 @@ class Experiment_data:
                     #current knockdown as the key
                     experiment.update({temp.experiment_identifier+'_'+i:temp})
                     self.features=next(iter(experiment.values())).features
+                    self.exclude=['meas_branchIntensity_2ndOrder', 'meas_filoIntensityToVeil_Norm', 'meas_filoIntensityEmbedded_Norm']
+                    self.feature_list=[i for i in self.features if i not in self.exclude]
+                else:
+                    print('invalid directory parsed')
         return experiment
 
     def feature_extraction(self, feature):
