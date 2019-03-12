@@ -209,8 +209,7 @@ def loop_graph(function, value):
     #data.grouped_features[feature].boxplot('z_score', by='KD', figsize=(12, 8))
 #either computes the MAD (robust==True),
 #or the standard deviation(robust==False)
-robust=False
-def MAD_robust(x):
+def MAD_robust(x, robust=False):
     if robust==True:
         med=np.median(x)
         dif=[np.abs(i-med) for i in x]
@@ -218,7 +217,7 @@ def MAD_robust(x):
     else:
         return np.std(x)
 #either computes the median (robust==True), or the mean (robust==False)
-def Mean_robust(x):
+def Mean_robust(x, robust=False):
     if robust==True:
         return np.median(x)
     else:
@@ -265,7 +264,7 @@ def calc_z_score():
         print(f)
         for enum, row in  enumerate(data.grouped_features[f]['value']):
             #populating variables for the identifiers of the df
-            k=data.grouped_features[f].iloc[enum]['KD']
+            #k=data.grouped_features[f].iloc[enum]['KD']
 
             e=data.grouped_features[f].iloc[enum]['experiment']
             t=data.grouped_features[f].iloc[enum]['timepoint']
@@ -279,7 +278,31 @@ def calc_z_score():
           
             data.grouped_features[f].loc[[enum],['z_score']]=np.float64(z_score)
         data.grouped_features[f]['z_score']= data.grouped_features[f]['z_score'].astype(float)
-         
+
+def calc_hetero(norm=True):
+    if norm==False:
+        #calculates the total standard deviation for each knock down per feature and the sum of it.
+        standev=[]
+        for f in data.feature_list:
+            temp=pd.DataFrame(data.grouped_features[f].groupby('KD')['value'].std())
+            temp=temp.rename(columns={'value':f})
+            standev.append(temp)
+        standev=pd.concat(standev, axis=1, sort=True)
+        standev['total']=standev.sum(axis=1)    
+        return standev
+    if norm==True:
+        #calculates the z_score using the calc_z_score() function.
+        calc_z_score()
+        #calculates the total z_score (absolute values) for each knock down per feature and the sum of it.
+        z_sum=[]
+        for f in data.feature_list:
+            temp=pd.DataFrame(data.grouped_features[f].groupby('KD')['z_score'].apply(lambda c: c.abs().sum()))
+            temp=temp.rename(columns={'z_score':f})
+            z_sum.append(temp)
+        z_sum=pd.concat(z_sum, axis=1, sort=True)
+        z_sum['total']=z_sum.sum(axis=1)  
+        return z_sum
+    
 def calc_ANOVA(f):    
     model_name= ols('value ~ C(KD)', data=data.grouped_features[f]).fit()
     return model_name
