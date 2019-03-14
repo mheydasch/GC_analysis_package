@@ -328,7 +328,8 @@ def calc_z_score(internal=False):
                     z_score=(row-mean_ctrl['value_Mean_robust'][ctrl_mask].values[0])/(mean_ctrl['value_MAD_robust'][ctrl_mask].values[0])
                     #adds the z_score value to the column 'z_score_int' as a float64
                     data.grouped_features[f].loc[[original_index],['z_score_int']]=np.float64(z_score)
-                
+        data.grouped_features[f]['z_score_int']= data.grouped_features[f]['z_score_int'].astype(float)
+
 
         
 def calc_hetero(norm=True, internal=True):
@@ -364,12 +365,22 @@ def calc_hetero(norm=True, internal=True):
                     
         #calculates the total z_score (absolute values) for each knock down per feature and the sum of it.
         z_sum=[]
+        #loops through the features
         for f in data.feature_list:
-            temp=pd.DataFrame(data.grouped_features[f].groupby('KD')[score].apply(lambda c: c.abs().sum()))
-            temp=temp.rename(columns={score:f})
+            #calculates the sum of the absolute values, of the z_score for each knockdown and counts the
+            #amount of values
+            temp=pd.DataFrame(data.grouped_features[f].groupby('KD').agg({score:[(lambda c: c.abs().sum()), 'count']}))
+            #drops outer index value created by .agg
+            temp.columns=temp.columns.droplevel(0)
+            #divides the cumulative z_score by the number of z_scores
+            temp=pd.DataFrame(temp['<lambda>']/temp['count'], columns=[f])
+            #appends temp to a list
             z_sum.append(temp)
+        #concatonates the list z_sum into a data frame    
         z_sum=pd.concat(z_sum, axis=1, sort=True)
-        z_sum['total']=z_sum.sum(axis=1)  
+        #sums up the average z_scores of the features and divides them by the 
+        #number of features giving the average z_score per condition
+        z_sum['total']=z_sum.sum(axis=1)/(z_sum.shape[1]-1)  
         return z_sum
     
 def calc_ANOVA(f):
