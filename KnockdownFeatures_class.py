@@ -24,9 +24,12 @@ class KnockdownFeatures:
         self.kd_path=kd_path
         self.KD=KD
         self.KD_pattern=re.compile('({}{}[0-9]+)'.format(self.KD, os.sep))
-        self.experiment_identifier=kd_path.split(os.sep)[-2]
-        #self.Experiment_pattern=re.compile('SiRNA_[0-9]+')
-        #self.experiment_identifier=re.search(self.Experiment_pattern, self.kd_path).group()
+        #use this if you have uniform path architecture, but different group namings
+        #self.experiment_identifier=kd_path.split(os.sep)[-2]
+        
+        #use this if you have different path architectures in your folders
+        self.Experiment_pattern=re.compile('SiRNA_[0-9]+')
+        self.experiment_identifier=re.search(self.Experiment_pattern, self.kd_path).group()
     def info(self):
         '''
         prints info about this instance of the class
