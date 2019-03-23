@@ -58,9 +58,9 @@ def parseArguments():
   # Define the parser and read arguments
   parser = argparse.ArgumentParser(description='a function including various statistical tools to be applied to the data objects.')
   parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
-  parser.add_argument('-k','--kd', nargs='+', help='add the directories with spaces between them', required=True)
-  parser.add_argument('-t','--TSNE', help='set True for TSNE output', required=False)
-  parser.add_argument('-f','--figures', help='set True for figure printing of raw data, z_score for figure printing of z_scores', required=False)
+  parser.add_argument('-k','--kd', nargs='+', help='add the knockdown folder names with spaces between them', required=True)
+  parser.add_argument('-t','--TSNE', help='set True for TSNE output. leave empty to skip this output', required=False)
+  parser.add_argument('-f','--figures', help='set True for figure printing of raw data, z_score for figure printing of z_scores. leave empty to skip this output', required=False)
 
 
   args = parser.parse_args()
@@ -426,9 +426,11 @@ if __name__ == '__main__':
     data.extract_all()
     if figures=='True':
         loop_graph(pyplot, 'value')
+        print('figures are saved at {}'.format(path[0]))
     if figures=='z_score':
         calc_z_score()
         loop_graph(pyplot, 'z_score')
+        print('figures are saved at {}'.format(path[0]))
     
     
     if TSNE=='True':
