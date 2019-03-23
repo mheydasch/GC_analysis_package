@@ -307,12 +307,9 @@ def calc_z_score(internal=False):
             print(f)
             data.grouped_features[f]['z_score_int']=''
             for k in data.knockdowns:
-                print(k)
-
-   
+                print(k)   
                 #creating a boolean mask for the knockdowns
                 knockdown_mask=data.grouped_features[f]['KD']==k              
-
                 #iterating through the values of current featurer only for the current knockdown
                 for enum, row in  enumerate(data.grouped_features[f][knockdown_mask]['value']):
                     #populating variables for the identifiers of the df
@@ -357,11 +354,13 @@ def calc_hetero(norm=True, internal=True):
     if norm==True:
         if internal==True:
             score='z_score_int'
-            calc_z_score(internal=True)
+            if score not in data.grouped_features[data.features[1]]:
+                calc_z_score(internal=True)
         if internal==False:
              #calculates the z_score using the calc_z_score() function.
              score='z_score'
-             calc_z_score()
+             if score not in data.grouped_features[data.features[1]]:
+                 calc_z_score()
                     
         #calculates the total z_score (absolute values) for each knock down per feature and the sum of it.
         z_sum=[]
@@ -379,7 +378,7 @@ def calc_hetero(norm=True, internal=True):
         #concatonates the list z_sum into a data frame    
         z_sum=pd.concat(z_sum, axis=1, sort=True)
         #sums up the average z_scores of the features and divides them by the 
-        #number of features giving the average z_score per condition
+        #number of features
         z_sum['total']=z_sum.sum(axis=1)/(z_sum.shape[1]-1)  
         return z_sum
     
