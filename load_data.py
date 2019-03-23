@@ -119,10 +119,14 @@ class Experiment_data:
         #for each object in the dict
         for i in self.experiment:
             #print('extracting feature: ', feature, 'for group: ', i)
+            
             #creates a list with each element being a dataframe for the same feature
             #for a different group
-            temp=self.experiment[i].all_features[feature]
-            l.append(temp)
+            try:
+                temp=self.experiment[i].all_features[feature]
+                l.append(temp)
+            except KeyError:
+                print('Error: feature {} not found'.format(feature))
         #concatonates the list to a dataframe    
         cross_group_feature = pd.concat(l, axis=0, sort=True)
         cross_group_feature=cross_group_feature.reset_index(drop=True)
@@ -138,7 +142,10 @@ class Experiment_data:
         self.grouped_features={}
         for feature in self.features:       
             #print('extracting feature: ', feature)
-            self.grouped_features.update({feature:self.feature_extraction(feature)})
+            try:
+                self.grouped_features.update({feature:self.feature_extraction(feature)})
+            except KeyError:
+                print('Error: feature {} not found'.format(feature))
 #%%
     def pca_feature_data(self):
         '''
