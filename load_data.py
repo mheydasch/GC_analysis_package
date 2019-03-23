@@ -88,6 +88,7 @@ class Experiment_data:
         '''
         loads the objects for each individual feature
         '''
+        self.features=[]
         experiment={}
         #for each of the specified knockdowns 
         #create an object from the KnockdownFeatures class at the first path instance
@@ -102,11 +103,14 @@ class Experiment_data:
                     #adds the object to a dictionary with the objects experiment identifier and the
                     #current knockdown as the key
                     experiment.update({temp.experiment_identifier+'_'+i:temp})
-                    self.features=next(iter(experiment.values())).features
-                    self.exclude=['meas_branchIntensity_2ndOrder', 'meas_filoIntensityToVeil_Norm', 'meas_filoIntensityEmbedded_Norm']
-                    self.feature_list=[i for i in self.features if i not in self.exclude]
+                    self.features=self.features+temp.features
                 else:
                     print('invalid directory parsed')
+        self.features=pd.Series(self.features).unique()
+        self.features=list(self.features)
+        #self.features=next(iter(experiment.values())).features
+        self.exclude=['meas_branchIntensity_2ndOrder', 'meas_filoIntensityToVeil_Norm', 'meas_filoIntensityEmbedded_Norm']
+        self.feature_list=[i for i in self.features if i not in self.exclude]
         return experiment
 
     def feature_extraction(self, feature):
