@@ -91,6 +91,27 @@ def createFolder(directory):
             os.makedirs(directory)
     except OSError:
         print ('Error: Creating directory. ' + directory) 
+def median(a, l, r): 
+    n = r - l + 1
+    n = (n + 1) // 2 - 1
+    return n + l 
+
+# Function to calculate IQR 
+def IQR(a, n): 
+
+    a.sort() 
+
+    # Index of median of entire data 
+    mid_index = median(a, 0, n) 
+
+    # Median of first half 
+    Q1 = a[median(a, 0, mid_index)] 
+
+    # Median of second half 
+    Q3 = a[median(a, mid_index + 1, n)] 
+
+    # IQR calculation 
+    return Q3
 
 def pyplot(feature, value):
     to_tag=False
@@ -102,9 +123,11 @@ def pyplot(feature, value):
     #y_data=data.grouped_features[feature].iloc[list(y_index.groups[x_data[0]])]['value']
     #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
     traces=[]
+   # Q3=[]
     sig, alpha=calc_Bonferroni(feature)
     #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
-    for enum, xd in enumerate(x_data):              
+    for enum, xd in enumerate(x_data):     
+        #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
         traces.append(go.Box(
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
         # a list of indices for that group. This list of indeces is used to index the dataframe, and obtain
@@ -124,6 +147,7 @@ def pyplot(feature, value):
 
         layout = go.Layout(              
         title=feature,
+        autosize=True,
         yaxis=dict(
             autorange=True,
             showgrid=True,
@@ -133,13 +157,17 @@ def pyplot(feature, value):
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
             zerolinewidth=2,
+            automargin=True,
             ),
-        margin=dict(
-            l=40,
-            r=30,
-            b=80,
-            t=100,
-        ),
+           
+# =============================================================================
+#         margin=dict(
+#             l=40,
+#             r=30,
+#             b=80,
+#             t=3*max(Q3),
+#         ),
+# =============================================================================
         paper_bgcolor='rgb(243, 243, 243)',
         plot_bgcolor='rgb(243, 243, 243)',
         showlegend=True
@@ -192,7 +220,7 @@ def pyplot(feature, value):
         file='{}/{}.html'.format(sig_folder,feature)
     else:
         file='{}{}.html'.format(path[0],feature)
-    plotly.offline.plot(fig, filename = file, auto_open=False)
+    plotly.offline.plot(fig, filename = file, auto_open=True)
         
     return fig
 
