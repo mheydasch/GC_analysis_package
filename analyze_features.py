@@ -156,7 +156,7 @@ def pyplot(feature, value):
         whiskerwidth=0.2,
         marker=dict(
             size=2,
-            color=colour_dict[xd[0][1]]
+            color=colour_dict[xd[1]]
         ),
         line=dict(width=1),
         ))
