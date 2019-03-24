@@ -131,15 +131,17 @@ def pyplot(feature, value):
     traces=[]
    # Q3=[]
     colour_dict={}
+    for enum, kd in enumerate(knockdowns):
+        if enum >= len(DEFAULT_PLOTLY_COLORS):
+            enum=0
+        #making a colour dictionary, to give each box its own colour based on the knockdown group
+        if kd not in colour_dict.keys():
+            colour_dict.update({kd:DEFAULT_PLOTLY_COLORS[enum]})
 
     sig, alpha=calc_Bonferroni(feature)
     #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
     for enum, xd in enumerate(x_data):   
-        if enum >= len(DEFAULT_PLOTLY_COLORS):
-            enum=0
-        #making a colour dictionary, to give each box its own colour based on the knockdown group
-        if xd[0][1]not in colour_dict.keys():
-            colour_dict.update({xd[0][1]:DEFAULT_PLOTLY_COLORS[enum]})
+
         #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
         traces.append(go.Box(
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
