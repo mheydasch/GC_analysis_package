@@ -115,6 +115,12 @@ def IQR(a, n):
 
 def pyplot(feature, value):
     to_tag=False
+    DEFAULT_PLOTLY_COLORS=['rgb(31, 119, 180)', 'rgb(255, 127, 14)',
+                       'rgb(44, 160, 44)', 'rgb(214, 39, 40)',
+                       'rgb(148, 103, 189)', 'rgb(140, 86, 75)',
+                       'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
+                       'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
+    
     
     #gets the keys to the groups for indexing
     x_data=list(data.grouped_features[feature].groupby(['experiment', 'KD']).groups.keys())
@@ -124,9 +130,16 @@ def pyplot(feature, value):
     #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
     traces=[]
    # Q3=[]
+    colour_dict={}
+
     sig, alpha=calc_Bonferroni(feature)
     #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
-    for enum, xd in enumerate(x_data):     
+    for enum, xd in enumerate(x_data):   
+        if enum >= len(DEFAULT_PLOTLY_COLORS):
+            enum=0
+        #making a colour dictionary, to give each box its own colour based on the knockdown group
+        if xd[0][1]not in colour_dict.keys():
+            colour_dict.update({xd[0][1]:DEFAULT_PLOTLY_COLORS[enum]})
         #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
         traces.append(go.Box(
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
@@ -141,6 +154,7 @@ def pyplot(feature, value):
         whiskerwidth=0.2,
         marker=dict(
             size=2,
+            color=colour_dict[xd[0][1]]
         ),
         line=dict(width=1),
         ))
@@ -222,7 +236,7 @@ def pyplot(feature, value):
         file='{}{}.html'.format(path[0],feature)
     plotly.offline.plot(fig, filename = file, auto_open=False)
         
-    return fig
+    return fig, x_data
 
 def loop_graph(function, value):
     '''
