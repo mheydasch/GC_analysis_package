@@ -129,7 +129,8 @@ def pyplot(feature, value):
     #y_data=data.grouped_features[feature].iloc[list(y_index.groups[x_data[0]])]['value']
     #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
     traces=[]
-    Q3=[]
+    #Q3=[]
+    rescale_values=[]
     colour_dict={}
     for enum, kd in enumerate(knockdowns):
         if enum >= len(DEFAULT_PLOTLY_COLORS):
@@ -141,8 +142,8 @@ def pyplot(feature, value):
     sig, alpha=calc_Bonferroni(feature)
     #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
     for enum, xd in enumerate(x_data):   
-
-        Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
+        rescale_values.append(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].std()+data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median())
+        #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
         traces.append(go.Box(
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
         # a list of indices for that group. This list of indeces is used to index the dataframe, and obtain
@@ -173,7 +174,7 @@ def pyplot(feature, value):
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
             zerolinewidth=2,
-            range=[0, 3*max(Q3)]
+            range=[0, 4*max(rescale_values)]
            # automargin=True,
             ),
            
@@ -237,7 +238,7 @@ def pyplot(feature, value):
         file='{}/{}.html'.format(sig_folder,feature)
     else:
         file='{}{}.html'.format(path[0],feature)
-    plotly.offline.plot(fig, filename = file, auto_open=False)
+    plotly.offline.plot(fig, filename = file, auto_open=True)
         
     return fig, x_data
 
