@@ -239,7 +239,7 @@ def pyplot(feature, value):
         file='{}/{}.html'.format(sig_folder,feature)
     else:
         file='{}{}.html'.format(path[0],feature)
-    plotly.offline.plot(fig, filename = file, auto_open=False)
+    plotly.offline.plot(fig, filename = file, image='svg', auto_open=False)
         
     return fig, x_data
 
