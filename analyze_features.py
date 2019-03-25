@@ -30,6 +30,7 @@ from statsmodels.stats.multicomp import MultiComparison
 from statsmodels.formula.api import ols
 sys.path.append(os.path.realpath(__file__))
 import load_data as exp
+import statistics 
 #from load_data import KnockdownFeatures_class as kd
 
 '''
@@ -37,7 +38,7 @@ This script is taking a list of folders and a list of knockdowns as the input.
 These will be used as input to the load_data.py module.
 This script is containing several statistical functions to analyze the data object
 created by load_data.py.
-It can be run from the command line and is giving the options to run a bonferroni corrected
+It can be run from the command line and is giving the options to run a bonferroni corrected|
 t-test to compare the knockdowns with the respective control and print figures for all features
 with significance annotations. Figures can either be based on raw data, or on the z_score
 In addition it gives the option to print .csv files of median feature values to be fed 
@@ -174,7 +175,7 @@ def pyplot(feature, value):
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
             zerolinewidth=2,
-            range=[0, 4*max(rescale_values)]
+            range=[0, 4*statistics.median(rescale_values)]
            # automargin=True,
             ),
            
