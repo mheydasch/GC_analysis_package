@@ -129,7 +129,7 @@ def pyplot(feature, value):
     #y_data=data.grouped_features[feature].iloc[list(y_index.groups[x_data[0]])]['value']
     #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
     traces=[]
-   # Q3=[]
+    Q3=[]
     colour_dict={}
     for enum, kd in enumerate(knockdowns):
         if enum >= len(DEFAULT_PLOTLY_COLORS):
@@ -142,7 +142,7 @@ def pyplot(feature, value):
     #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
     for enum, xd in enumerate(x_data):   
 
-        #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
+        Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
         traces.append(go.Box(
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
         # a list of indices for that group. This list of indeces is used to index the dataframe, and obtain
@@ -165,7 +165,7 @@ def pyplot(feature, value):
         title=feature,
         autosize=True,
         yaxis=dict(
-            autorange=True,
+            #autorange=True,
             showgrid=True,
             zeroline=True,
             dtick=5,
@@ -173,7 +173,8 @@ def pyplot(feature, value):
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
             zerolinewidth=2,
-            automargin=True,
+            range=[0, 3*max(Q3)]
+           # automargin=True,
             ),
            
 # =============================================================================
