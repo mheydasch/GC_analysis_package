@@ -208,7 +208,7 @@ def pyplot(feature, value):
  
     fig = go.Figure(data=traces, layout=layout)
     #counts the number of observations for each group
-    count=data.grouped_features[feature].groupby(['experiment', 'KD'])['value'].count()
+    count=data.grouped_features[feature].groupby(['experiment', 'KD'])[value].count()
     for enum, xd in enumerate(x_data):
         sig_index=xd[0]+xd[1]
         #gets the number of observations for the current box
@@ -236,7 +236,7 @@ def pyplot(feature, value):
                     #positions on x axis based on current box
                     x=enum,
                     #positions text based on y axis based on the median of current box
-                    y=data.grouped_features[feature].iloc[list(y_index.groups[xd])]['value'].median(),
+                    y=data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median(),
                     yref='y',                
                     xref='x',   
                     text='p: {}<br>n: {}'.format(p, n),
