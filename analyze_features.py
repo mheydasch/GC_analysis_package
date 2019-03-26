@@ -123,16 +123,26 @@ def pyplot(feature, value):
                        'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
     
     
-    #gets the keys to the groups for indexing
-    x_data=list(data.grouped_features[feature].groupby(['experiment', 'KD']).groups.keys())
-    #gets a group object the groups are referring to
-    y_index=data.grouped_features[feature].groupby(['experiment', 'KD'])[value]
+
+    z_score_mask=(data.grouped_features[feature]['KD']!='CTRL')
+    #excluding the control from plots showing the z_score
+    if value == 'z_score':
+        x_data=list(data.grouped_features[feature][z_score_mask].groupby(['experiment', 'KD']).groups.keys())
+        y_index=data.grouped_features[feature][z_score_mask].groupby(['experiment', 'KD']['KD'!='CTRL'])[value]
+    else:
+        #gets the keys to the groups for indexing
+        x_data=list(data.grouped_features[feature].groupby(['experiment', 'KD']).groups.keys())
+        #gets a group object the groups are referring to
+        y_index=data.grouped_features[feature].groupby(['experiment', 'KD'])[value]
     #y_data=data.grouped_features[feature].iloc[list(y_index.groups[x_data[0]])]['value']
     #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
     traces=[]
     #Q3=[]
     rescale_values=[]
     colour_dict={}
+    
+
+        
     for enum, kd in enumerate(knockdowns):
         if enum >= len(DEFAULT_PLOTLY_COLORS):
             enum=0
@@ -162,7 +172,11 @@ def pyplot(feature, value):
         ),
         line=dict(width=1),
         ))
-
+        if value=='z_score':
+            lower_limit=-(4*statistics.median(rescale_values))
+        else:
+            lower_limit=0
+        upper_limit=4*statistics.median(rescale_values)
         layout = go.Layout(              
         title=feature,
         autosize=True,
@@ -175,7 +189,7 @@ def pyplot(feature, value):
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
             zerolinewidth=2,
-            range=[0, 4*statistics.median(rescale_values)]
+            range=[lower_limit, upper_limit]
            # automargin=True,
             ),
            
@@ -224,7 +238,7 @@ def pyplot(feature, value):
                     #positions text based on y axis based on the median of current box
                     y=data.grouped_features[feature].iloc[list(y_index.groups[xd])]['value'].median(),
                     yref='y',                
-                    xref='x',
+                    xref='x',   
                     text='p: {}<br>n: {}'.format(p, n),
                     showarrow=True,
                     #determines the length of the arrow for the annotation text
