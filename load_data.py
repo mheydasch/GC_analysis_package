@@ -130,7 +130,7 @@ class Experiment_data:
                 temp=self.experiment[i].all_features[feature]
                 l.append(temp)
             except KeyError:
-                print('Error: feature {} not found'.format(feature))
+                print('Error: feature {} not found for group {}'.format(feature, i))
         #concatonates the list to a dataframe    
         cross_group_feature = pd.concat(l, axis=0, sort=True)
         cross_group_feature=cross_group_feature.reset_index(drop=True)

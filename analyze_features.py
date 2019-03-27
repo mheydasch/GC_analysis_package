@@ -344,7 +344,7 @@ def calc_z_score(internal=False):
         mean_ctrl=calc_mean_ctrl()
         for f in data.features:    
             data.grouped_features[f]['z_score']=''
-            print(f)
+            print('calculating z_score for ',f)
             for enum, row in  enumerate(data.grouped_features[f]['value']):
                 #populating variables for the identifiers of the df
                 #k=data.grouped_features[f].iloc[enum]['KD']
@@ -365,7 +365,7 @@ def calc_z_score(internal=False):
         mean_ctrl=calc_mean_ctrl(all_features=True)
         
         for f in data.features: 
-            print(f)
+            print('calculating z_score for ', f)
             data.grouped_features[f]['z_score_int']=''
             for k in data.knockdowns:
                 print(k)   
