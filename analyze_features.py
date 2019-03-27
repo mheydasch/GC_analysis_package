@@ -139,6 +139,7 @@ def pyplot(feature, value):
     traces=[]
     #Q3=[]
     rescale_values=[]
+    lower_rescale_values=[]
     colour_dict={}
     
 
@@ -154,6 +155,8 @@ def pyplot(feature, value):
     #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
     for enum, xd in enumerate(x_data):   
         rescale_values.append(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].std()+data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median())
+        lower_rescale_values.append(-1*(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].std())-data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median())
+
         #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
         traces.append(go.Box(
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
@@ -173,7 +176,7 @@ def pyplot(feature, value):
         line=dict(width=1),
         ))
         if value=='z_score':
-            lower_limit=-(4*statistics.median(rescale_values))
+            lower_limit=3*statistics.median(lower_rescale_values)
         else:
             lower_limit=0
         upper_limit=4*statistics.median(rescale_values)
