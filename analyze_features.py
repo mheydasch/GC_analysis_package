@@ -128,7 +128,7 @@ def pyplot(feature, value):
     #excluding the control from plots showing the z_score
     if value == 'z_score':
         x_data=list(data.grouped_features[feature][z_score_mask].groupby(['experiment', 'KD']).groups.keys())
-        y_index=data.grouped_features[feature][z_score_mask].groupby(['experiment', 'KD']['KD'!='CTRL'])[value]
+        y_index=data.grouped_features[feature][z_score_mask].groupby(['experiment', 'KD'])[value]
     else:
         #gets the keys to the groups for indexing
         x_data=list(data.grouped_features[feature].groupby(['experiment', 'KD']).groups.keys())
