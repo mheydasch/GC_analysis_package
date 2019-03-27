@@ -501,6 +501,18 @@ if __name__ == '__main__':
         data.save_df(data.wide_feature, path[0], 'wide_time')
         data.save_df(data.wide_attribute, path[0], 'wide_attribute')
         print('csv files for TSNE are saved at{}'.format(path[0]))
+        
+    if TSNE=='z_score':
+        if figures!='z_score':
+            calc_z_score()
+            data.pca_feature_data(value='z_score')
+            data.pca_attribute_data()
+            data.save_df(data.wide_feature, path[0], 'wide_feature')
+            data.save_df(data.wide_feature, path[0], 'wide_time')
+            data.save_df(data.wide_attribute, path[0], 'wide_attribute')
+            print('csv files for TSNE are saved at{}'.format(path[0]))
+                
+        
 #%%
 #pyplot(feature, 'value')
 #%%    

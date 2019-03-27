@@ -151,7 +151,8 @@ class Experiment_data:
             except KeyError:
                 print('Error: feature {} not found'.format(feature))
 #%%
-    def pca_feature_data(self):
+    def pca_feature_data(self, value='value'):
+        
         '''
         creates a wide format dataframe with the feature data for each cell
         to use for PCA analysis
@@ -161,11 +162,11 @@ class Experiment_data:
         
         for enum, f in enumerate(self.feature_list):
             #computes the median value of the current feature for each group and appends the 
-            #resulting dataframe consisting of variavle and median value
+            #resulting dataframe consisting of variable and median value
             #to the list
-            temp.append(self.grouped_features[f].groupby('variable').agg({'value':'median'}))
+            temp.append(self.grouped_features[f].groupby('variable').agg({value:'median'}))
             #renames the column of the dataframe to the current feature
-            temp[enum].rename(columns = {'value':'{}'.format(f)}, inplace = True)
+            temp[enum].rename(columns = {value:'{}'.format(f)}, inplace = True)
         #concatonates the list to one data frame adding it as an attribute to the object
         self.wide_feature=pd.concat(temp, axis=1, sort=True)
         self.wide_feature=self.wide_feature.fillna(0)
