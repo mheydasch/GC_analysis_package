@@ -158,8 +158,7 @@ class Experiment_data:
         to use for PCA analysis
         '''
         temp=[]
-        #loops through features
-        
+        #loops through features            
         for enum, f in enumerate(self.feature_list):
             #computes the median value of the current feature for each group and appends the 
             #resulting dataframe consisting of variable and median value

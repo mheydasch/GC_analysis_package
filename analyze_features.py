@@ -61,7 +61,7 @@ def parseArguments():
   parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
   parser.add_argument('-k','--kd', nargs='+', help='add the knockdown folder names with spaces between them', required=True)
   parser.add_argument('-t','--TSNE', help='set True for TSNE output. leave empty to skip this output', required=False)
-  parser.add_argument('-f','--figures', help='set True for figure printing of raw data, z_score for figure printing of z_scores. leave empty to skip this output', required=False)
+  parser.add_argument('-f','--figures', help='set True for figure printing of raw data, z_score for figure printing of z_scores.set to featureplot for featureplots leave empty to skip this output ', required=False)
 
 
   args = parser.parse_args()
@@ -99,26 +99,30 @@ def median(a, l, r):
 
 def featureplot(KD, value):
     to_tag=False
-    DEFAULT_PLOTLY_COLORS=['rgb(31, 119, 180)', 'rgb(255, 127, 14)',
-                       'rgb(44, 160, 44)', 'rgb(214, 39, 40)',
-                       'rgb(148, 103, 189)', 'rgb(140, 86, 75)',
-                       'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
-                       'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
+# =============================================================================
+#     DEFAULT_PLOTLY_COLORS=['rgb(31, 119, 180)', 'rgb(255, 127, 14)',
+#                        'rgb(44, 160, 44)', 'rgb(214, 39, 40)',
+#                        'rgb(148, 103, 189)', 'rgb(140, 86, 75)',
+#                        'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
+#                        'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
+# =============================================================================
     
     #if wide feature attribute isnt already existing in data it is calling
     #pca_feature_data and pca_attribute_data() 
     if hasattr(data, 'wide_feature')==False:
         data.pca_feature_data(value=value)
         data.pca_attribute_data()
-    #creates a variable of data to plot    
-    if hasattr(data, 'KD_plot_data')==False or value not in data.plot_data.columns:
+   
+    #creates a variable of data to plot 
+    if hasattr(data, 'KD_plot_data')==False:
         KD_plot_data=data.wide_feature
         #adds the column for the knockdowns from the attribute_data
         KD_plot_data['KD']=data.wide_attribute['knockdown']
         #melts it to long format
         KD_plot_data=pd.melt(KD_plot_data, id_vars='KD')
         data.KD_plot_data=KD_plot_data.rename(columns={'variable':'feature', 'value':value})
-
+        
+        
     to_plot=data.KD_plot_data[(data.KD_plot_data['KD']==KD)]
 
 # =============================================================================
@@ -139,29 +143,31 @@ def featureplot(KD, value):
     #Q3=[]
     rescale_values=[]
     lower_rescale_values=[]
-    colour_dict={}
+    #colour_dict={}
     
 
         
-    for enum, kd in enumerate(data.knockdowns):
-        if enum >= len(DEFAULT_PLOTLY_COLORS):
-            enum=0
-        #making a colour dictionary, to give each box its own colour based on the knockdown group
-        if kd not in colour_dict.keys():
-            colour_dict.update({kd:DEFAULT_PLOTLY_COLORS[enum]})
+# =============================================================================
+#     for enum, kd in enumerate(data.knockdowns):
+#         if enum >= len(DEFAULT_PLOTLY_COLORS):
+#             enum=0
+#         #making a colour dictionary, to give each box its own colour based on the knockdown group
+#         if kd not in colour_dict.keys():
+#             colour_dict.update({kd:DEFAULT_PLOTLY_COLORS[enum]})
+# =============================================================================
 
     #sig, alpha=calc_Bonferroni(feature)
     #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
     for enum, xd in enumerate(x_data):   
-        rescale_values.append(data.to_plot.iloc[list(y_index.groups[xd])][value].std()+data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median())
-        lower_rescale_values.append(-1*(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].std())-data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median())
+        #rescale_values.append(to_plot.loc[list(y_index.groups[xd])][value].std()+to_plot.loc[list(y_index.groups[xd])][value].median())
+        #lower_rescale_values.append(-1*(to_plot.loc[list(y_index.groups[xd])][value].std())-to_plot.loc[list(y_index.groups[xd])][value].median())
 
         #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
         traces.append(go.Box(
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
         # a list of indices for that group. This list of indeces is used to index the dataframe, and obtain
         #the value column of it.        
-        y=to_plot.iloc[list(y_index.groups[xd])][value],
+        y=to_plot.loc[list(y_index.groups[xd])][value],
         name=str(xd),
         #adds the points for each value next to the box
         boxpoints=False,
@@ -170,16 +176,20 @@ def featureplot(KD, value):
         whiskerwidth=0.2,
         marker=dict(
             size=2,
-            color=colour_dict[xd[1]]
+            #color=colour_dict[xd[1]]
         ),
         line=dict(width=1),
         ))
-        if value=='z_score':
-            lower_limit=3*statistics.median(lower_rescale_values)
-        else:
-            lower_limit=0
-        upper_limit=4*statistics.median(rescale_values)
-        layout = go.Layout(              
+# =============================================================================
+#         if value=='z_score':
+#             lower_limit=3*statistics.median(lower_rescale_values)
+#         else:
+#             lower_limit=0
+#         upper_limit=4*statistics.median(rescale_values)
+# =============================================================================
+        layout = go.Layout( 
+        boxgap=0,
+        boxgroupgap=0,
         title=KD,
         autosize=True,
         yaxis=dict(
@@ -191,7 +201,7 @@ def featureplot(KD, value):
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
             zerolinewidth=2,
-            range=[lower_limit, upper_limit]
+            #range=[lower_limit, upper_limit]
            # automargin=True,
             ),
            
@@ -205,57 +215,59 @@ def featureplot(KD, value):
 # =============================================================================
         paper_bgcolor='rgb(243, 243, 243)',
         plot_bgcolor='rgb(243, 243, 243)',
-        showlegend=True
+        showlegend=False
         )
  
     fig = go.Figure(data=traces, layout=layout)
     #counts the number of observations for each group
-    count=data.grouped_features[feature].groupby(['experiment', 'KD'])[value].count()
-    for enum, xd in enumerate(x_data):
-        sig_index=xd[0]+xd[1]
-        #gets the number of observations for the current box
-        n=str(count[xd])
-
-        
-        #getting the title for each column the following way:
-        #getting the sig_index by concatonating the two strings of xd
-        #and using this as the key for the bonferrony corrected t_test
-        #to obtain the second value, which is the p value
-        try:
-            p=round(sig[sig_index][1], 4)
-            #adds a star if the p value is significant
-            if p < alpha:
-                p=str(p)
-                p=p+'*'
-                #marks the plot as being significant
-                to_tag=True
-            p=str(p)
-        #exception, if no p value exists (i.e. for control)
-        except:
-            p=''   
-        
-        fig['layout']['annotations']+=tuple([dict(
-                    #positions on x axis based on current box
-                    x=enum,
-                    #positions text based on y axis based on the median of current box
-                    y=data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median(),
-                    yref='y',                
-                    xref='x',   
-                    text='p: {}<br>n: {}'.format(p, n),
-                    showarrow=True,
-                    #determines the length of the arrow for the annotation text
-                    arrowhead=0,
-                    ax=0,
-                    ay=-10
-                    )])
+# =============================================================================
+#     count=to_plot.groupby(['feature'])[value].count()
+#     for enum, xd in enumerate(x_data):
+#         sig_index=xd[0]+xd[1]
+#         #gets the number of observations for the current box
+#         n=str(count[xd])
+# 
+#         
+#         #getting the title for each column the following way:
+#         #getting the sig_index by concatonating the two strings of xd
+#         #and using this as the key for the bonferrony corrected t_test
+#         #to obtain the second value, which is the p value
+#         try:
+#             p=round(sig[sig_index][1], 4)
+#             #adds a star if the p value is significant
+#             if p < alpha:
+#                 p=str(p)
+#                 p=p+'*'
+#                 #marks the plot as being significant
+#                 to_tag=True
+#             p=str(p)
+#         #exception, if no p value exists (i.e. for control)
+#         except:
+#             p=''   
+#         
+#         fig['layout']['annotations']+=tuple([dict(
+#                     #positions on x axis based on current box
+#                     x=enum,
+#                     #positions text based on y axis based on the median of current box
+#                     y=to_plot.groupby(['feature'])[value].median(),
+#                     yref='y',                
+#                     xref='x',   
+#                     text='p: {}<br>n: {}'.format('NA', n),
+#                     showarrow=True,
+#                     #determines the length of the arrow for the annotation text
+#                     arrowhead=0,
+#                     ax=0,
+#                     ay=-10
+#                     )])
+# =============================================================================
     if to_tag==True:
         #saves the plot in a different folder, if one or more groups show significance
         sig_folder=os.path.join(path[0], 'significant')
         createFolder(sig_folder)
-        file='{}/{}.html'.format(sig_folder,feature)
+        file='{}/{}.html'.format(sig_folder,KD)
     else:
-        file='{}{}.html'.format(path[0],feature)
-    plotly.offline.plot(fig, filename = file, image='svg', auto_open=False)
+        file='{}{}.html'.format(path[0],KD)
+    plotly.offline.plot(fig, filename = file, image='svg', auto_open=True)
         
     return fig
 def loop_featureplot(function, value):
@@ -650,6 +662,8 @@ if __name__ == '__main__':
         calc_z_score()
         loop_graph(pyplot, 'z_score')
         print('figures are saved at {}'.format(path[0]))
+    if figures=='featureplot':
+        loop_featureplot(featureplot, 'z_score')
     
     
     if TSNE=='True':
