@@ -97,22 +97,177 @@ def median(a, l, r):
     n = (n + 1) // 2 - 1
     return n + l 
 
-# Function to calculate IQR 
-def IQR(a, n): 
+def featureplot(KD, value):
+    to_tag=False
+    DEFAULT_PLOTLY_COLORS=['rgb(31, 119, 180)', 'rgb(255, 127, 14)',
+                       'rgb(44, 160, 44)', 'rgb(214, 39, 40)',
+                       'rgb(148, 103, 189)', 'rgb(140, 86, 75)',
+                       'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
+                       'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
+    
+    #if wide feature attribute isnt already existing in data it is calling
+    #pca_feature_data and pca_attribute_data() 
+    if hasattr(data, 'wide_feature')==False:
+        data.pca_feature_data(value=value)
+        data.pca_attribute_data()
+    #creates a variable of data to plot    
+    if hasattr(data, 'KD_plot_data')==False or value not in data.plot_data.columns:
+        KD_plot_data=data.wide_feature
+        #adds the column for the knockdowns from the attribute_data
+        KD_plot_data['KD']=data.wide_attribute['knockdown']
+        #melts it to long format
+        KD_plot_data=pd.melt(KD_plot_data, id_vars='KD')
+        data.KD_plot_data=KD_plot_data.rename(columns={'variable':'feature', 'value':value})
 
-    a.sort() 
+    to_plot=data.KD_plot_data[(data.KD_plot_data['KD']==KD)]
 
-    # Index of median of entire data 
-    mid_index = median(a, 0, n) 
+# =============================================================================
+#     z_score_mask=(data.grouped_features[feature]['KD']!='CTRL')
+#     #excluding the control from plots showing the z_score
+#     if value == 'z_score':
+#         x_data=list(data.grouped_features[feature][z_score_mask].groupby(['experiment', 'KD']).groups.keys())
+#         y_index=data.grouped_features[feature][z_score_mask].groupby(['experiment', 'KD'])[value]
+#     else:
+# =============================================================================
+    #gets the keys to the groups for indexing
+    x_data=list(to_plot.groupby(['feature']).groups.keys())
+    #gets a group object the groups are referring to
+    y_index=to_plot.groupby(['feature'])[value]
+    #y_data=data.grouped_features[feature].iloc[list(y_index.groups[x_data[0]])]['value']
+    #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
+    traces=[]
+    #Q3=[]
+    rescale_values=[]
+    lower_rescale_values=[]
+    colour_dict={}
+    
 
-    # Median of first half 
-    Q1 = a[median(a, 0, mid_index)] 
+        
+    for enum, kd in enumerate(data.knockdowns):
+        if enum >= len(DEFAULT_PLOTLY_COLORS):
+            enum=0
+        #making a colour dictionary, to give each box its own colour based on the knockdown group
+        if kd not in colour_dict.keys():
+            colour_dict.update({kd:DEFAULT_PLOTLY_COLORS[enum]})
 
-    # Median of second half 
-    Q3 = a[median(a, mid_index + 1, n)] 
+    #sig, alpha=calc_Bonferroni(feature)
+    #https://stackoverflow.com/questions/26536899/how-do-you-add-labels-to-a-plotly-boxplot-in-python
+    for enum, xd in enumerate(x_data):   
+        rescale_values.append(data.to_plot.iloc[list(y_index.groups[xd])][value].std()+data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median())
+        lower_rescale_values.append(-1*(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].std())-data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median())
 
-    # IQR calculation 
-    return Q3
+        #Q3.append(IQR(list(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value]), len(data.grouped_features[feature].iloc[list(y_index.groups[xd])][value])))         
+        traces.append(go.Box(
+        #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
+        # a list of indices for that group. This list of indeces is used to index the dataframe, and obtain
+        #the value column of it.        
+        y=to_plot.iloc[list(y_index.groups[xd])][value],
+        name=str(xd),
+        #adds the points for each value next to the box
+        boxpoints=False,
+        #boxpoint='all',
+        jitter=0.5,
+        whiskerwidth=0.2,
+        marker=dict(
+            size=2,
+            color=colour_dict[xd[1]]
+        ),
+        line=dict(width=1),
+        ))
+        if value=='z_score':
+            lower_limit=3*statistics.median(lower_rescale_values)
+        else:
+            lower_limit=0
+        upper_limit=4*statistics.median(rescale_values)
+        layout = go.Layout(              
+        title=KD,
+        autosize=True,
+        yaxis=dict(
+            #autorange=True,
+            showgrid=True,
+            zeroline=True,
+            dtick=5,
+            gridcolor='rgb(255, 255, 255)',
+            gridwidth=1,
+            zerolinecolor='rgb(255, 255, 255)',
+            zerolinewidth=2,
+            range=[lower_limit, upper_limit]
+           # automargin=True,
+            ),
+           
+# =============================================================================
+#         margin=dict(
+#             l=40,
+#             r=30,
+#             b=80,
+#             t=3*max(Q3),
+#         ),
+# =============================================================================
+        paper_bgcolor='rgb(243, 243, 243)',
+        plot_bgcolor='rgb(243, 243, 243)',
+        showlegend=True
+        )
+ 
+    fig = go.Figure(data=traces, layout=layout)
+    #counts the number of observations for each group
+    count=data.grouped_features[feature].groupby(['experiment', 'KD'])[value].count()
+    for enum, xd in enumerate(x_data):
+        sig_index=xd[0]+xd[1]
+        #gets the number of observations for the current box
+        n=str(count[xd])
+
+        
+        #getting the title for each column the following way:
+        #getting the sig_index by concatonating the two strings of xd
+        #and using this as the key for the bonferrony corrected t_test
+        #to obtain the second value, which is the p value
+        try:
+            p=round(sig[sig_index][1], 4)
+            #adds a star if the p value is significant
+            if p < alpha:
+                p=str(p)
+                p=p+'*'
+                #marks the plot as being significant
+                to_tag=True
+            p=str(p)
+        #exception, if no p value exists (i.e. for control)
+        except:
+            p=''   
+        
+        fig['layout']['annotations']+=tuple([dict(
+                    #positions on x axis based on current box
+                    x=enum,
+                    #positions text based on y axis based on the median of current box
+                    y=data.grouped_features[feature].iloc[list(y_index.groups[xd])][value].median(),
+                    yref='y',                
+                    xref='x',   
+                    text='p: {}<br>n: {}'.format(p, n),
+                    showarrow=True,
+                    #determines the length of the arrow for the annotation text
+                    arrowhead=0,
+                    ax=0,
+                    ay=-10
+                    )])
+    if to_tag==True:
+        #saves the plot in a different folder, if one or more groups show significance
+        sig_folder=os.path.join(path[0], 'significant')
+        createFolder(sig_folder)
+        file='{}/{}.html'.format(sig_folder,feature)
+    else:
+        file='{}{}.html'.format(path[0],feature)
+    plotly.offline.plot(fig, filename = file, image='svg', auto_open=False)
+        
+    return fig
+def loop_featureplot(function, value):
+    '''
+    creates a graph for each knockdown
+    '''
+    for k in data.knockdowns:
+        function(k, value)
+        time.sleep(1)
+
+
+
 
 def pyplot(feature, value):
     to_tag=False
@@ -162,7 +317,7 @@ def pyplot(feature, value):
         #list(y_index.groups[xd]) applies the index of one group to the grouped dataframe to obtain
         # a list of indices for that group. This list of indeces is used to index the dataframe, and obtain
         #the value column of it.        
-        y=data.grouped_features[feature].iloc[list(y_index.groups[xd])][value],
+        y=data.grouped_features[feature].loc[list(y_index.groups[xd])][value],
         name=str(xd),
         #adds the points for each value next to the box
         boxpoints='all',
@@ -498,8 +653,9 @@ if __name__ == '__main__':
     
     
     if TSNE=='True':
-        data.pca_feature_data()
-        data.pca_attribute_data()
+        if hasattr(data, 'wide_feature')==False:
+            data.pca_feature_data()
+            data.pca_attribute_data()
         data.save_df(data.wide_feature, path[0], 'wide_feature')
         data.save_df(data.wide_feature, path[0], 'wide_time')
         data.save_df(data.wide_attribute, path[0], 'wide_attribute')
