@@ -141,8 +141,8 @@ def featureplot(KD, value):
     #y_data=data.grouped_features[feature].groupby(['experiment', 'KD']).groups[x_data[1]]
     traces=[]
     #Q3=[]
-    rescale_values=[]
-    lower_rescale_values=[]
+    #rescale_values=[]
+    #lower_rescale_values=[]
     #colour_dict={}
     
 
@@ -267,7 +267,7 @@ def featureplot(KD, value):
         file='{}/{}.html'.format(sig_folder,KD)
     else:
         file='{}{}.html'.format(path[0],KD)
-    plotly.offline.plot(fig, filename = file, image='svg', auto_open=True)
+    plotly.offline.plot(fig, filename = file, image='svg', auto_open=False)
         
     return fig
 def loop_featureplot(function, value):
@@ -679,7 +679,7 @@ if __name__ == '__main__':
         print('csv files for TSNE are saved at{}'.format(path[0]))
         
     if TSNE=='z_score':
-        if figures!='z_score':
+        if figures!='z_score' and figures!='featureplot':
             calc_z_score()
             data.pca_feature_data(value='z_score')
             data.pca_attribute_data()
