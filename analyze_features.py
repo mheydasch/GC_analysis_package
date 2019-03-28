@@ -663,7 +663,10 @@ if __name__ == '__main__':
         loop_graph(pyplot, 'z_score')
         print('figures are saved at {}'.format(path[0]))
     if figures=='featureplot':
+        calc_z_score()
         loop_featureplot(featureplot, 'z_score')
+        print('figures are saved at {}'.format(path[0]))
+
     
     
     if TSNE=='True':
