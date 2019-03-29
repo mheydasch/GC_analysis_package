@@ -201,7 +201,7 @@ def featureplot(KD, value):
             gridwidth=1,
             zerolinecolor='rgb(0, 0, 0)',
             zerolinewidth=2,
-            range=[-4, 4]
+            range=[-5, 5]
            # automargin=True,
             ),
            
@@ -345,8 +345,8 @@ def pyplot(feature, value):
         line=dict(width=1),
         ))
         if value=='z_score':
-            lower_limit=-4
-            upper_limit=4
+            lower_limit=-8
+            upper_limit=8
         else:
             lower_limit=0
         upper_limit=4*statistics.median(rescale_values)
