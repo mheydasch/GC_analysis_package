@@ -361,6 +361,9 @@ def pyplot(feature, value):
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
             zerolinewidth=2,
+            if value=='z_score':
+                range=[-4, 4]
+            
             range=[lower_limit, upper_limit]
            # automargin=True,
             ),
@@ -669,7 +672,7 @@ if __name__ == '__main__':
         print('figures are saved at {}'.format(path[0]))
     if figures=='featureplot':
         calc_z_score()
-        loop_featureplot(featureplot, 'z_score')
+        loop_featureplot('z_score')
         print('figures are saved at {}'.format(path[0]))
 
     
