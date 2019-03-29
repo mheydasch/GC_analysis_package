@@ -345,7 +345,8 @@ def pyplot(feature, value):
         line=dict(width=1),
         ))
         if value=='z_score':
-            lower_limit=3*statistics.median(lower_rescale_values)
+            lower_limit=-4
+            upper_limit=4
         else:
             lower_limit=0
         upper_limit=4*statistics.median(rescale_values)
@@ -360,10 +361,7 @@ def pyplot(feature, value):
             gridcolor='rgb(255, 255, 255)',
             gridwidth=1,
             zerolinecolor='rgb(255, 255, 255)',
-            zerolinewidth=2,
-            if value=='z_score':
-                range=[-4, 4]
-            
+            zerolinewidth=2,            
             range=[lower_limit, upper_limit]
            # automargin=True,
             ),
@@ -672,7 +670,7 @@ if __name__ == '__main__':
         print('figures are saved at {}'.format(path[0]))
     if figures=='featureplot':
         calc_z_score()
-        loop_featureplot('z_score')
+        loop_featureplot(featureplot, 'z_score')
         print('figures are saved at {}'.format(path[0]))
 
     
