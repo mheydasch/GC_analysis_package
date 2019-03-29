@@ -98,7 +98,7 @@ def median(a, l, r):
     return n + l 
 
 def featureplot(KD, value):
-    to_tag=False
+    #to_tag=False
 # =============================================================================
 #     DEFAULT_PLOTLY_COLORS=['rgb(31, 119, 180)', 'rgb(255, 127, 14)',
 #                        'rgb(44, 160, 44)', 'rgb(214, 39, 40)',
@@ -197,11 +197,11 @@ def featureplot(KD, value):
             showgrid=True,
             zeroline=True,
             dtick=5,
-            gridcolor='rgb(255, 255, 255)',
+            gridcolor='rgb(0, 0, 0)',
             gridwidth=1,
-            zerolinecolor='rgb(255, 255, 255)',
+            zerolinecolor='rgb(0, 0, 0)',
             zerolinewidth=2,
-            #range=[lower_limit, upper_limit]
+            range=[-4, 4]
            # automargin=True,
             ),
            
@@ -260,22 +260,24 @@ def featureplot(KD, value):
 #                     ay=-10
 #                     )])
 # =============================================================================
-    if to_tag==True:
-        #saves the plot in a different folder, if one or more groups show significance
-        sig_folder=os.path.join(path[0], 'significant')
-        createFolder(sig_folder)
-        file='{}/{}.html'.format(sig_folder,KD)
-    else:
-        file='{}{}.html'.format(path[0],KD)
+# =============================================================================
+#     if to_tag==True:
+#         #saves the plot in a different folder, if one or more groups show significance
+#         sig_folder=os.path.join(path[0], 'significant')
+#         createFolder(sig_folder)
+#         file='{}/{}.html'.format(sig_folder,KD)
+#     else:
+# =============================================================================
+    file='{}{}.html'.format(path[0],KD)
     plotly.offline.plot(fig, filename = file, image='svg', auto_open=False)
         
     return fig
-def loop_featureplot(function, value):
+def loop_featureplot(value):
     '''
     creates a graph for each knockdown
     '''
     for k in data.knockdowns:
-        function(k, value)
+        featureplot(k, value)
         time.sleep(1)
 
 
@@ -440,7 +442,7 @@ def loop_graph(function, value):
     #data.grouped_features[feature].boxplot('z_score', by='KD', figsize=(12, 8))
 #either computes the MAD (robust==True),
 #or the standard deviation(robust==False)
-def MAD_robust(x, robust=False):
+def MAD_robust(x, robust=True):
     if robust==True:
         med=np.median(x)
         dif=[np.abs(i-med) for i in x]
@@ -448,7 +450,7 @@ def MAD_robust(x, robust=False):
     else:
         return np.std(x)
 #either computes the median (robust==True), or the mean (robust==False)
-def Mean_robust(x, robust=False):
+def Mean_robust(x, robust=True):
     if robust==True:
         return np.median(x)
     else:
@@ -473,12 +475,13 @@ def calc_mean_ctrl(all_features=False):
     calculates the mean values of each feature grouped by timepoint and by experiment
     only for the ctrl
     '''
-    #all features==False used fors tandard z_score. Only calculates the mean and standard deviation for the control
+    #all features==False used for standard z_score. Only calculates the mean and standard deviation for the control
     if all_features==False:
         mean_ctrl=[]
         for f in data.features:
             temp=pd.DataFrame()
-            temp=data.grouped_features[f][data.grouped_features[f]['KD']=='CTRL'].groupby(['timepoint', 'experiment'], as_index=False).agg({'value':[MAD_robust, Mean_robust]})    
+            temp=data.grouped_features[f][data.grouped_features[f]['KD']=='CTRL'].groupby(['experiment'], as_index=False).agg({'value':[MAD_robust, Mean_robust]})    
+            #temp=data.grouped_features[f][data.grouped_features[f]['KD']=='CTRL'].groupby(['timepoint', 'experiment'], as_index=False).agg({'value':[MAD_robust, Mean_robust]})    
             temp['feature']=f
             mean_ctrl.append(temp)
         mean_ctrl = pd.concat(mean_ctrl, axis=0, sort=True)
@@ -513,24 +516,26 @@ def calc_z_score(internal=False):
     if internal==False:
         mean_ctrl=calc_mean_ctrl()
         for f in data.features:    
-            data.grouped_features[f]['z_score']=''
+            z_scores=[]
+            #data.grouped_features[f]['z_score']=''
             print('calculating z_score for ',f)
             for enum, row in  enumerate(data.grouped_features[f]['value']):
                 #populating variables for the identifiers of the df
                 #k=data.grouped_features[f].iloc[enum]['KD']
     
                 e=data.grouped_features[f].iloc[enum]['experiment']
-                t=data.grouped_features[f].iloc[enum]['timepoint']
+                #t=data.grouped_features[f].iloc[enum]['timepoint']
                 #creating boolean mask to subset the correct items from the mean feature df
                 #feature_mask=((mean_features['feature_']==f) & (mean_features['KD_']==k) & (mean_features['experiment_']==e) & (mean_features['timepoint_']==t))
                 #creating boolean mask for the ctrl, same as for knockdown, but without the knockdown parameter
-                ctrl_mask=((mean_ctrl['feature_']==f) & (mean_ctrl['experiment_']==e) & (mean_ctrl['timepoint_']==t))
+                ctrl_mask=((mean_ctrl['feature_']==f) & (mean_ctrl['experiment_']==e)) #& (mean_ctrl['timepoint_']==t))
                 #print(f, k, e, t, enum)
                 #calculating z_score
-                z_score=(row-mean_ctrl['value_Mean_robust'][ctrl_mask].values[0])/(mean_ctrl['value_MAD_robust'][ctrl_mask].values[0])
-              
-                data.grouped_features[f].loc[[enum],['z_score']]=np.float64(z_score)
-            data.grouped_features[f]['z_score']= data.grouped_features[f]['z_score'].astype(float)
+                z_score=np.float64((row-(mean_ctrl['value_Mean_robust'][ctrl_mask]))/(mean_ctrl['value_MAD_robust'][ctrl_mask]))
+                z_scores.append(z_score)
+            data.grouped_features[f]['z_score']=z_scores
+                #data.grouped_features[f].iloc[enum]['z_score']=np.float64(z_score)
+            #data.grouped_features[f]['z_score']= data.grouped_features[f]['z_score'].astype(float)
     if internal==True:
         mean_ctrl=calc_mean_ctrl(all_features=True)
         
