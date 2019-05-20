@@ -667,6 +667,7 @@ def long_feature_data():
     long_feature=long_feature.drop(['meltid', 'value', 'timepoint', 'item', 'experiment'], axis=1)
     long_feature=long_feature[(long_feature.z_score < 3.5) & (long_feature.z_score > -3.5)]
     long_feature=long_feature.groupby(['variable', 'feature', 'KD'], as_index=False)['z_score'].mean()
+    long_feature=long_feature.dropna()
     return long_feature
 #%%
 if __name__ == '__main__':
