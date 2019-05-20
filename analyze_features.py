@@ -666,6 +666,7 @@ def long_feature_data():
         long_feature=pd.concat([long_feature, data.grouped_features[f]])
     long_feature=long_feature.drop(['meltid', 'value', 'timepoint', 'item', 'experiment'], axis=1)
     long_feature=long_feature[(long_feature.z_score < 3.5) & (long_feature.z_score > -3.5)]
+    long_feature=long_feature.groupby(['variable', 'feature', 'KD'], as_index=False)['z_score'].mean()
     return long_feature
 #%%
 if __name__ == '__main__':
@@ -710,7 +711,6 @@ if __name__ == '__main__':
         if figures!='z_score' and figures!='featureplot':
             calc_z_score()
         long_feature=long_feature_data()
-        long_feature=long_feature.groupby(['variable', 'feature'])['z_score'].median()            
         data.save_df(long_feature, path[0], 'long_feature')
 #%%
 #pyplot(feature, 'value')
