@@ -709,7 +709,8 @@ if __name__ == '__main__':
     if TSNE=='long':
         if figures!='z_score' and figures!='featureplot':
             calc_z_score()
-        long_feature=long_feature_data()            
+        long_feature=long_feature_data()
+        long_feature=long_feature.groupby(['variable', 'feature'])['z_score'].median()            
         data.save_df(long_feature, path[0], 'long_feature')
 #%%
 #pyplot(feature, 'value')
