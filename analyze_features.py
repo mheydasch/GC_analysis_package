@@ -60,7 +60,8 @@ def parseArguments():
   parser = argparse.ArgumentParser(description='a function including various statistical tools to be applied to the data objects.')
   parser.add_argument('-d','--dir', nargs='+', help='add the directories with spaces between them', required=True)
   parser.add_argument('-k','--kd', nargs='+', help='add the knockdown folder names with spaces between them', required=True)
-  parser.add_argument('-t','--TSNE', help='set True for TSNE output. leave empty to skip this output', required=False)
+  parser.add_argument('-t','--TSNE', help='set True for TSNE output, \'z_score\' for TSNE output as z_score \
+                      \'long\' for long format csv with z_score values. leave empty to skip this output', required=False)
   parser.add_argument('-f','--figures', help='set True for figure printing of raw data, z_score for figure printing of z_scores.set to featureplot for featureplots leave empty to skip this output ', required=False)
 
 
@@ -651,6 +652,21 @@ def calc_Bonferroni(f):
                     key=grps.index[enum]+g
                     sig.update({key:temp})
     return sig, alpha
+
+#%%
+def long_feature_data():
+    '''
+    creates a dataframe long_feature that holds all values for all features,
+    drops unnecessary, or duplicate entries and removes any z_score values over
+    3.5 and under -3.5
+    '''
+    long_feature = pd.DataFrame()
+    for f in data.feature_list:
+        data.grouped_features[f]['feature']=f
+        long_feature=pd.concat([long_feature, data.grouped_features[f]])
+    long_feature=long_feature.drop(['meltid', 'value', 'timepoint', 'item', 'experiment'], axis=1)
+    long_feature=long_feature[(long_feature.z_score < 3.5) & (long_feature.z_score > -3.5)]
+    return long_feature
 #%%
 if __name__ == '__main__':
     args=parseArguments()
@@ -671,10 +687,7 @@ if __name__ == '__main__':
     if figures=='featureplot':
         calc_z_score()
         loop_featureplot('z_score')
-        print('figures are saved at {}'.format(path[0]))
-
-    
-    
+        print('figures are saved at {}'.format(path[0]))    
     if TSNE=='True':
         if hasattr(data, 'wide_feature')==False:
             data.pca_feature_data()
@@ -693,8 +706,11 @@ if __name__ == '__main__':
             data.save_df(data.wide_feature, path[0], 'wide_time')
             data.save_df(data.wide_attribute, path[0], 'wide_attribute')
             print('csv files for TSNE are saved at{}'.format(path[0]))
-                
-        
+    if TSNE=='long':
+        if figures!='z_score' and figures!='featureplot':
+            calc_z_score()
+            long_feature=data.long_feature_data()            
+            data.save_df(long_feature, path[0], 'long_feature')
 #%%
 #pyplot(feature, 'value')
 #%%    
