@@ -700,17 +700,17 @@ if __name__ == '__main__':
     if TSNE=='z_score':
         if figures!='z_score' and figures!='featureplot':
             calc_z_score()
-            data.pca_feature_data(value='z_score')
-            data.pca_attribute_data()
-            data.save_df(data.wide_feature, path[0], 'wide_feature')
-            data.save_df(data.wide_feature, path[0], 'wide_time')
-            data.save_df(data.wide_attribute, path[0], 'wide_attribute')
-            print('csv files for TSNE are saved at{}'.format(path[0]))
+        data.pca_feature_data(value='z_score')
+        data.pca_attribute_data()
+        data.save_df(data.wide_feature, path[0], 'wide_feature')
+        data.save_df(data.wide_feature, path[0], 'wide_time')
+        data.save_df(data.wide_attribute, path[0], 'wide_attribute')
+        print('csv files for TSNE are saved at{}'.format(path[0]))
     if TSNE=='long':
         if figures!='z_score' and figures!='featureplot':
             calc_z_score()
-            long_feature=data.long_feature_data()            
-            data.save_df(long_feature, path[0], 'long_feature')
+        long_feature=data.long_feature_data()            
+        data.save_df(long_feature, path[0], 'long_feature')
 #%%
 #pyplot(feature, 'value')
 #%%    
